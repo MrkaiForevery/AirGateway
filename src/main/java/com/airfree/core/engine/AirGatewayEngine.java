@@ -3,6 +3,8 @@ package com.airfree.core.engine;
 import com.airfree.core.AirGateway;
 import com.airfree.filter.AirGatewayFilterManager;
 import com.airfree.filter.AirGatewayStrategy;
+import io.micrometer.core.annotation.Counted;
+import io.micrometer.core.annotation.Timed;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,6 +30,8 @@ public class AirGatewayEngine implements AirGateway {
 
 
     @Override
+//    @Timed(value = "gateway.route.lookup", description = "路由查找耗时")  日志切入点
+//    @Counted(value = "gateway.route.lookup.requests", description = "路由查找请求数")
     public Mono<ServerResponse> routeApiRequest(ServerRequest serverRequest) {
         //自定义customerFilter执行逻辑
         ServerWebExchange exchange = serverRequest.exchange();

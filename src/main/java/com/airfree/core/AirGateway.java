@@ -1,7 +1,5 @@
 package com.airfree.core;
 
-import com.airfree.entity.request.AirGatewayInternalRequest;
-import com.airfree.entity.response.AirGatewayInternalResponse;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;

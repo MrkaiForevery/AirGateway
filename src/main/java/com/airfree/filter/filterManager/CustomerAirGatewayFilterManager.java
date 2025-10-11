@@ -47,12 +47,13 @@ public class CustomerAirGatewayFilterManager implements AirGatewayFilterManager 
 
     @PostConstruct
     public void init() {
-        //把所有的AbstractAirGatewayFilter注入进来
+        //把所有的AbstractAirGatewayFilter注入进来,这里不能使用getBeansOfType注入自定义的filter，只能以注解的方式注入进来
         customerAirGatewayFilterMap.putAll(applicationContext.getBeansOfType(AbstractAirGatewayFilter.class));
         //把所有的AirGatewayStrategy注入进来
         customerFilterStrategyMap.putAll(applicationContext.getBeansOfType(AirGatewayStrategy.class));
         //调用一次buildAllFilterChainByStrategy(),初始化customerFiltersChainMap
         buildAllFilterChainByStrategy(customerFilterStrategyMap);
+        log.info("🚀 customerFilterChain初始化完成");
     }
 
     @Override
@@ -106,8 +107,7 @@ public class CustomerAirGatewayFilterManager implements AirGatewayFilterManager 
                 .map(customerAirGatewayFilterMap::get)
                 .filter(Objects::nonNull) // 过滤掉null值
                 .forEach(filterChain::add);
-        log.info("策略 {} 构建filterChain成功，包含 {} 个过滤器",
-                strategy.getClass().getSimpleName(), filterChain.size());
+        log.info("🚀 刷新customerFilter策略链成功， {} 构建filterChain成功，当前包含 {} 个过滤器",strategy.getClass().getSimpleName(), filterChain.size());
       return filterChain;
     }
 

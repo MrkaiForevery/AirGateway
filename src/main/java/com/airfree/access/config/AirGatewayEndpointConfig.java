@@ -21,14 +21,15 @@ public class AirGatewayEndpointConfig {
 
     private final AirGatewayEngine airGatewayEngine;
 
-    // 通过构造函数注入依赖
+    //通过构造器注入
     public AirGatewayEndpointConfig(AirGatewayEngine airGatewayEngine) {
         this.airGatewayEngine = airGatewayEngine;
+        log.info("🚀 主程序AirGatewayEndpoint加载完成！");
     }
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public RouterFunction<ServerResponse> gatewayEndpoint() {
+    public RouterFunction<ServerResponse> airGatewayEndpoint() {
         log.info("🚀 初始化最高优先级网关路由");
         return RouterFunctions
                 .route(RequestPredicates.path("/api/**"), this::handleApiRequest)
@@ -37,7 +38,6 @@ public class AirGatewayEndpointConfig {
                 .andRoute(RequestPredicates.path("/websocket/**"), this::handleWebsocketRequest)
                 .andRoute(RequestPredicates.path("/smpp/**"), this::handleSmppRequest)
                 .andRoute(RequestPredicates.path("/backend/**"), this::handleBackendRequest)
-                .andRoute(RequestPredicates.path("/**"), this::handleNotExistRouterRequest)
                 .filter((request, next) -> {
                     log.info("🟡 路由匹配 - 路径: {}, 方法: {}", request.path(), request.method());
                     return next.handle(request)
@@ -52,13 +52,8 @@ public class AirGatewayEndpointConfig {
                 });
     }
 
-    private Mono<ServerResponse> handleNotExistRouterRequest(ServerRequest serverRequest) {
-        log.info("请求路径不能为空，requestId: {}" + serverRequest.exchange().getRequest().getId());
-        return airGatewayEngine.routeApiRequest(serverRequest);
-    }
-
     private Mono<ServerResponse> handleApiRequest(ServerRequest serverRequest) {
-        System.out.println("进入该方法" + serverRequest.exchange().getRequest().getId());
+        log.info("进入该方法");
         return airGatewayEngine.routeApiRequest(serverRequest);
     }
 
@@ -83,6 +78,7 @@ public class AirGatewayEndpointConfig {
         return airGatewayEngine.forwardToBackend(serverRequest);
     }
 
+    //这个监听器可以放到监听模块里面实现
     @EventListener
     public void printRoutes(ApplicationReadyEvent event) {
         RouterFunctions.route().toString(); // 这并不直接打印所有路由，但你可以通过调试查看
@@ -93,8 +89,8 @@ public class AirGatewayEndpointConfig {
         // 但是注意，如果有多个 RouterFunction，getBean 可能会报错，你可以通过 getBeansOfType 获取所有
         Map<String, RouterFunction> routers = event.getApplicationContext().getBeansOfType(RouterFunction.class);
         routers.forEach((name, router) -> {
-            System.out.println("RouterFunction bean name: " + name);
-            System.out.println("RouterFunction: " + router);
+            log.info("RouterFunction bean name: {} ", name);
+            log.info("RouterFunction: {} ", router);
         });
     }
 }

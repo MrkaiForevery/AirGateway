@@ -1,2 +1,36 @@
 server:
-  port: 10100
+  port: 10101
+
+#自定义log系统参数配置
+air-gateway:
+  log:
+    logQueueCapacity: 11000
+
+#Micrometer和Actuator监控度量指标集成
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus,info
+  endpoint:
+    health:
+      show-details: always
+      show-components: always
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      sla:
+        http.server.requests: 100ms, 200ms, 500ms, 1s, 2s
+    tags:
+      application: air-gateway
+      environment: ${ENV:dev}
+  web:
+    server:
+      request:
+        autotime:
+          enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true

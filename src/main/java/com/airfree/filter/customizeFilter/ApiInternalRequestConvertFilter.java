@@ -1,6 +1,8 @@
 package com.airfree.filter.customizeFilter;
 
 import com.airfree.filter.AbstractAirGatewayFilter;
+import com.airfree.filter.filterChain.CustomWebFilterChain;
+import com.airfree.filter.filterEnums.ProtocolApiEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
@@ -23,18 +25,19 @@ import java.util.Map;
 @Component
 public class ApiInternalRequestConvertFilter extends AbstractAirGatewayFilter {
 
-    private static final String INTERNET_PROTOCOL_TYPE = "internet_protocol_type";
-    private static final String API_SOAP = "api_soap";
-    private static final String API_REST = "api_rest";
     private static final String NOT_SUPPORT = "unsupported_api_type";
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        //todo 如果这里的chain不是CustomWebFilterChain，而是webflux提供的DefaultWebFilterChain，那么直接放行
+        if (!chain.getClass().isInstance(CustomWebFilterChain.class)) {
+            return chain.filter(exchange);
+        }
         setNSupportAttributes(exchange);
-        String apiType = (String) exchange.getAttributes().get(INTERNET_PROTOCOL_TYPE);
-        if (NOT_SUPPORT.equals(exchange.getAttributes().get(INTERNET_PROTOCOL_TYPE))) {
+        String apiType = (String) exchange.getAttributes().get(ProtocolApiEnum.PROTOCOL_NOT_SUPPORT_TYPE.getTypeKey());
+        if (ProtocolApiEnum.PROTOCOL_NOT_SUPPORT_TYPE.getTypeValue().equals(exchange.getAttributes().get(ProtocolApiEnum.PROTOCOL_NOT_SUPPORT_TYPE.getTypeKey()))) {
             //then()会导致直接返回，不会执行下面的filter
-            log.info("拒绝请求，终止过滤器链");
+            log.info("拒绝请求，终止过滤器链,原因:系统不支持的api协议，");
             return ServerResponse.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE)
                     .bodyValue("unsupported api request")
                     .then();
@@ -49,10 +52,10 @@ public class ApiInternalRequestConvertFilter extends AbstractAirGatewayFilter {
                                 String originalContent = new String(bytes, StandardCharsets.UTF_8);
                                 String transformedContent = null;
                                 //内容转换,根据不同协议执行不同的转换逻辑
-                                if (API_SOAP.equals(apiType)) {
+                                if (ProtocolApiEnum.PROTOCOL_API_SOAP.getTypeValue().equals(apiType)) {
                                     transformedContent = transformSoapContent(originalContent, exchange);
                                 }
-                                if (API_REST.equals(apiType)) {
+                                if (ProtocolApiEnum.PROTOCOL_API_REST.getTypeValue().equals(apiType)) {
                                     transformedContent = transformRestContent(originalContent, exchange);
                                 }
                                 byte[] transformedBytes = transformedContent.getBytes(StandardCharsets.UTF_8);
@@ -88,17 +91,17 @@ public class ApiInternalRequestConvertFilter extends AbstractAirGatewayFilter {
         MediaType contentType = exchange.getRequest().getHeaders().getContentType();
         Map<String, Object> exchangeAttributes = exchange.getAttributes();
         if (contentType != null && (contentType.includes(MediaType.TEXT_XML) || contentType.includes(MediaType.APPLICATION_XML))) {
-            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, API_SOAP);
+            exchangeAttributes.put(ProtocolApiEnum.PROTOCOL_API_SOAP.getTypeKey(), ProtocolApiEnum.PROTOCOL_API_SOAP.getTypeValue());
         }
-        ;
+
         if (contentType != null && contentType.includes(MediaType.APPLICATION_JSON)) {
-            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, API_REST);
+            exchangeAttributes.put(ProtocolApiEnum.PROTOCOL_API_REST.getTypeKey(), ProtocolApiEnum.PROTOCOL_API_REST.getTypeValue());
         }
         //todo 模拟为null的请求，调试使用，直接默认给Rest
         if (contentType == null) {
-            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, API_REST);
+            exchangeAttributes.put(ProtocolApiEnum.PROTOCOL_API_REST.getTypeKey(), ProtocolApiEnum.PROTOCOL_API_REST.getTypeValue());
         } else {
-            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, NOT_SUPPORT);
+            exchangeAttributes.put(ProtocolApiEnum.PROTOCOL_NOT_SUPPORT_TYPE.getTypeKey(), ProtocolApiEnum.PROTOCOL_NOT_SUPPORT_TYPE.getTypeValue());
         }
     }
 
