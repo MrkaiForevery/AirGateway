@@ -2,12 +2,17 @@ package com.airfree.access.config;
 
 import com.airfree.core.engine.AirGatewayEngine;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
+
+import java.util.Map;
 
 @Slf4j
 @Configuration
@@ -22,46 +27,74 @@ public class AirGatewayEndpointConfig {
     }
 
     @Bean
-    @Order(-1)
+    @Order(Ordered.HIGHEST_PRECEDENCE)
     public RouterFunction<ServerResponse> gatewayEndpoint() {
+        log.info("🚀 初始化最高优先级网关路由");
         return RouterFunctions
                 .route(RequestPredicates.path("/api/**"), this::handleApiRequest)
                 .andRoute(RequestPredicates.path("/admin/**"), this::handleAdminRequest)
                 .andRoute(RequestPredicates.path("/ai/**"), this::handleAiRequest)
                 .andRoute(RequestPredicates.path("/websocket/**"), this::handleWebsocketRequest)
                 .andRoute(RequestPredicates.path("/smpp/**"), this::handleSmppRequest)
-                .andRoute(RequestPredicates.path("/backend/**"), this::handleBackendRequest);
+                .andRoute(RequestPredicates.path("/backend/**"), this::handleBackendRequest)
+                .andRoute(RequestPredicates.path("/**"), this::handleNotExistRouterRequest)
+                .filter((request, next) -> {
+                    log.info("🟡 路由匹配 - 路径: {}, 方法: {}", request.path(), request.method());
+                    return next.handle(request)
+                            .doOnSuccess(response -> {
+                                log.info("🟢 路由处理成功 - 路径: {}, 状态: {}",
+                                        request.path(), response.statusCode());
+                            })
+                            .doOnError(error -> {
+                                log.error("🔴 路由处理失败 - 路径: {}, 错误: {}",
+                                        request.path(), error.getMessage());
+                            });
+                });
+    }
+
+    private Mono<ServerResponse> handleNotExistRouterRequest(ServerRequest serverRequest) {
+        log.info("请求路径不能为空，requestId: {}" + serverRequest.exchange().getRequest().getId());
+        return airGatewayEngine.routeApiRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleApiRequest(ServerRequest serverRequest) {
-        log.info("处理api请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
-        Mono<ServerResponse> responseMono = airGatewayEngine.routeApiRequest(serverRequest);
-        return responseMono;
-//        return  airGatewayEngine.routeApiRequest(serverRequest);
+        System.out.println("进入该方法" + serverRequest.exchange().getRequest().getId());
+        return airGatewayEngine.routeApiRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleAdminRequest(ServerRequest serverRequest) {
-        log.info("处理Admin请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        System.out.println("进入该方法" + serverRequest.exchange().getRequest().getId());
         return airGatewayEngine.routeAdminRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleAiRequest(ServerRequest serverRequest) {
-        log.info("处理Ai请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
-        return  airGatewayEngine.routeAiRequest(serverRequest);
+        return airGatewayEngine.routeAiRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleWebsocketRequest(ServerRequest serverRequest) {
-        log.info("处理Websocket请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
-        return  airGatewayEngine.routeWebsocketRequest(serverRequest);
+        return airGatewayEngine.routeWebsocketRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleSmppRequest(ServerRequest serverRequest) {
-        log.info("处理Smpp请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
-        return  airGatewayEngine.routeSmppRequest(serverRequest);
+        return airGatewayEngine.routeSmppRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleBackendRequest(ServerRequest serverRequest) {
-        log.info("处理Backend请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
-        return  airGatewayEngine.forwardToBackend(serverRequest);
+        return airGatewayEngine.forwardToBackend(serverRequest);
+    }
+
+    @EventListener
+    public void printRoutes(ApplicationReadyEvent event) {
+        RouterFunctions.route().toString(); // 这并不直接打印所有路由，但你可以通过调试查看
+
+        // 或者使用以下方法获取所有路由函数
+        org.springframework.web.reactive.function.server.RouterFunction<?> routerFunction =
+                event.getApplicationContext().getBean(org.springframework.web.reactive.function.server.RouterFunction.class);
+        // 但是注意，如果有多个 RouterFunction，getBean 可能会报错，你可以通过 getBeansOfType 获取所有
+        Map<String, RouterFunction> routers = event.getApplicationContext().getBeansOfType(RouterFunction.class);
+        routers.forEach((name, router) -> {
+            System.out.println("RouterFunction bean name: " + name);
+            System.out.println("RouterFunction: " + router);
+        });
     }
 }

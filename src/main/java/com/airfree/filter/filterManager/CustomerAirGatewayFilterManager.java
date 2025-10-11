@@ -89,7 +89,7 @@ public class CustomerAirGatewayFilterManager implements AirGatewayFilterManager 
                     .filter(filter -> !filter.isDisable())
                     .collect(Collectors.toList());
             // 执行自定义的过滤器链 -- 关键：每次请求创建新实例
-            CustomWebFilterChain customChain = new CustomWebFilterChain(filterChain, originalChain);
+            CustomWebFilterChain customChain = new CustomWebFilterChain(enabledFilters, originalChain);
             return customChain.filter(exchange);
         }finally {
             readLock.unlock();

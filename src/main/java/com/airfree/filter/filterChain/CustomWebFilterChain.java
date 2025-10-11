@@ -1,6 +1,7 @@
 package com.airfree.filter.filterChain;
 
 import com.airfree.filter.AbstractAirGatewayFilter;
+import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
