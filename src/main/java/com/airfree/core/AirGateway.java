@@ -3,20 +3,21 @@ package com.airfree.core;
 import com.airfree.entity.request.AirGatewayInternalRequest;
 import com.airfree.entity.response.AirGatewayInternalResponse;
 import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 public interface AirGateway {
 
-    Mono<AirGatewayInternalResponse> routeApiRequest(ServerRequest serverRequest);
+    Mono<ServerResponse> routeApiRequest(ServerRequest serverRequest);
 
-    Mono<AirGatewayInternalResponse> routeAdminRequest(AirGatewayInternalRequest request);
+    Mono<ServerResponse> routeAdminRequest(ServerRequest serverRequest);
 
-    Mono<AirGatewayInternalResponse> routeAiRequest(AirGatewayInternalRequest request);
+    Mono<ServerResponse> routeAiRequest(ServerRequest serverRequest);
 
-    Mono<AirGatewayInternalResponse> routeWebsocketRequest(AirGatewayInternalRequest request);
+    Mono<ServerResponse> routeWebsocketRequest(ServerRequest serverRequest);
 
-    Mono<AirGatewayInternalResponse> routeSmppRequest(AirGatewayInternalRequest request);
+    Mono<ServerResponse> routeSmppRequest(ServerRequest serverRequest);
 
-    Mono<AirGatewayInternalResponse> forwardToBackend(AirGatewayInternalRequest request);
+    Mono<ServerResponse> forwardToBackend(ServerRequest serverRequest);
 
 }

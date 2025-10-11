@@ -1,105 +1,153 @@
 package com.airfree.core.engine;
 
 import com.airfree.core.AirGateway;
-import com.airfree.entity.request.AirGatewayInternalRequest;
-import com.airfree.entity.response.AirGatewayInternalResponse;
 import com.airfree.filter.AirGatewayFilterManager;
 import com.airfree.filter.AirGatewayStrategy;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@Slf4j
 @Component
 public class AirGatewayEngine implements AirGateway {
 
     //这里可以用构造器的方式注入所需要的流控，性能，监控等动态配置缓存
     @Resource
-    private AirGatewayFilterManager airGatewayFilterManager;
+    @Qualifier("customerAirGatewayFilterManager")
+    private AirGatewayFilterManager customerAirGatewayFilterManager;
 
 
     @Override
-    public Mono<AirGatewayInternalResponse> routeApiRequest(ServerRequest serverRequest) {
-        //filter执行逻辑
-        AirGatewayStrategy apiFilterStrategy = airGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+    public Mono<ServerResponse> routeApiRequest(ServerRequest serverRequest) {
+        //自定义customerFilter执行逻辑
         ServerWebExchange exchange = serverRequest.exchange();
-        airGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+        AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
 
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'a', 'p', 'i'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+        return customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null)
+                .then(ServerResponse.ok()
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp")))
+                .onErrorResume(throwable -> handleError(throwable));
+    }
+
+    //这里先用mock的方式替代
+    private Map<String, Object> mockCreateSuccessResponse(int status, String message, String data) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("status", 200);
+        response.put("message", "api request processed successfully");
+        response.put("data", "api");
+        return response;
+    }
+
+    // 错误处理方法
+    private Mono<ServerResponse> handleError(Throwable throwable) {
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("status", 500);
+        errorResponse.put("message", "Error processing request: " + throwable.getMessage());
+
+        return ServerResponse.status(500)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(errorResponse);
     }
 
     @Override
-    public Mono<AirGatewayInternalResponse> routeAdminRequest(AirGatewayInternalRequest request) {
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'a', 'd', 'm', 'i', 'n'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+    public Mono<ServerResponse> routeAdminRequest(ServerRequest serverRequest) {
+        //自定义customerFilter执行逻辑
+        ServerWebExchange exchange = serverRequest.exchange();
+        return Mono.fromCallable(() -> {
+                    AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+                    customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+                    return exchange;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(processedExchange -> {
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp"));
+                })
+                .onErrorResume(throwable -> handleError(throwable));
     }
 
     @Override
-    public Mono<AirGatewayInternalResponse> routeAiRequest(AirGatewayInternalRequest request) {
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'a', 'i'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+    public Mono<ServerResponse> routeAiRequest(ServerRequest serverRequest) {
+        //自定义customerFilter执行逻辑
+        ServerWebExchange exchange = serverRequest.exchange();
+        return Mono.fromCallable(() -> {
+                    AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+                    customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+                    return exchange;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(processedExchange -> {
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp"));
+                })
+                .onErrorResume(throwable -> handleError(throwable));
     }
 
     @Override
-    public Mono<AirGatewayInternalResponse> routeWebsocketRequest(AirGatewayInternalRequest request) {
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'w', 'e', 'b', 's', 'o', 'c', 'k', 'e', 't'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+    public Mono<ServerResponse> routeWebsocketRequest(ServerRequest serverRequest) {
+        //自定义customerFilter执行逻辑
+        ServerWebExchange exchange = serverRequest.exchange();
+        return Mono.fromCallable(() -> {
+                    AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+                    customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+                    return exchange;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(processedExchange -> {
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp"));
+                })
+                .onErrorResume(throwable -> handleError(throwable));
     }
 
     @Override
-    public Mono<AirGatewayInternalResponse> routeSmppRequest(AirGatewayInternalRequest request) {
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'s', 'm', 'p', 'p'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+    public Mono<ServerResponse> routeSmppRequest(ServerRequest serverRequest) {
+        //自定义customerFilter执行逻辑
+        ServerWebExchange exchange = serverRequest.exchange();
+        return Mono.fromCallable(() -> {
+                    AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+                    customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+                    return exchange;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(processedExchange -> {
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp"));
+                })
+                .onErrorResume(throwable -> handleError(throwable));
     }
 
     @Override
-    public Mono<AirGatewayInternalResponse> forwardToBackend(AirGatewayInternalRequest request) {
-        //todo 流式编程不能返回null，这里先让它返回一个默认的成功
-        return Mono.defer(() -> {
-            // 创建默认的成功响应
-            AirGatewayInternalResponse response = new AirGatewayInternalResponse();
-            response.setStatus(200);
-            byte[] body = {'b', 'a', 'c', 'k', 'e', 'n', 'd'};
-            response.setBody(body);
-            return Mono.just(response);
-        });
+    public Mono<ServerResponse> forwardToBackend(ServerRequest serverRequest) {
+        ///自定义customerFilter执行逻辑
+        ServerWebExchange exchange = serverRequest.exchange();
+        return Mono.fromCallable(() -> {
+                    AirGatewayStrategy apiFilterStrategy = customerAirGatewayFilterManager.findAirGatewayStrategyName("ApiFilterStrategy");
+                    customerAirGatewayFilterManager.executeFilterChain(apiFilterStrategy, exchange, null);
+                    return exchange;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .flatMap(processedExchange -> {
+                    return ServerResponse.ok()
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .bodyValue(mockCreateSuccessResponse(200, "api request processed successfully", "apiResp"));
+                })
+                .onErrorResume(throwable -> handleError(throwable));
     }
 
 

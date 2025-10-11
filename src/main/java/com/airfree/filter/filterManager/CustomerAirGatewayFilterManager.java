@@ -8,12 +8,12 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilterChain;
-import org.springframework.web.server.WebHandler;
 import org.springframework.web.server.handler.DefaultWebFilterChain;
 import reactor.core.publisher.Mono;
 
@@ -31,7 +31,8 @@ import java.util.stream.Collectors;
 //todo 这里应该要添加一个监听器，同步刷新策略缓存cache
 @Slf4j
 @Component
-public class DefaultAirGatewayFilterManager implements AirGatewayFilterManager {
+@Qualifier("customerAirGatewayFilterManager")
+public class CustomerAirGatewayFilterManager implements AirGatewayFilterManager {
 
     @Resource
     private ApplicationContext applicationContext;

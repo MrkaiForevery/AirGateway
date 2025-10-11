@@ -1,17 +1,15 @@
 package com.airfree.access.config;
 
 import com.airfree.core.engine.AirGatewayEngine;
-import com.airfree.entity.converter.RequestConverter;
-import com.airfree.entity.converter.ResponseConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.reactive.config.EnableWebFlux;
 import org.springframework.web.reactive.function.server.*;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
-
+@Slf4j
 @Configuration
 @EnableWebFlux
 public class AirGatewayEndpointConfig {
@@ -36,52 +34,34 @@ public class AirGatewayEndpointConfig {
     }
 
     private Mono<ServerResponse> handleApiRequest(ServerRequest serverRequest) {
-        //执行过滤链条，不同的请求协议提供不同的过滤策略链
-
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.routeApiRequest(serverRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理api请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        Mono<ServerResponse> responseMono = airGatewayEngine.routeApiRequest(serverRequest);
+        return responseMono;
+//        return  airGatewayEngine.routeApiRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleAdminRequest(ServerRequest serverRequest) {
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.routeAdminRequest(airGatewayInternalRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理Admin请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        return airGatewayEngine.routeAdminRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleAiRequest(ServerRequest serverRequest) {
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.routeAiRequest(airGatewayInternalRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理Ai请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        return  airGatewayEngine.routeAiRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleWebsocketRequest(ServerRequest serverRequest) {
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.routeWebsocketRequest(airGatewayInternalRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理Websocket请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        return  airGatewayEngine.routeWebsocketRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleSmppRequest(ServerRequest serverRequest) {
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.routeSmppRequest(airGatewayInternalRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理Smpp请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        return  airGatewayEngine.routeSmppRequest(serverRequest);
     }
 
     private Mono<ServerResponse> handleBackendRequest(ServerRequest serverRequest) {
-        //api接口request类型对象转换
-        return Mono.fromCallable(() -> RequestConverter.converterApiInternalRequest(serverRequest))
-                .subscribeOn(Schedulers.boundedElastic()) // 在弹性线程池中执行阻塞操作
-                .flatMap(airGatewayInternalRequest -> airGatewayEngine.forwardToBackend(airGatewayInternalRequest))
-                .transform(ResponseConverter::converterApiInternalResponse);
+        log.info("处理Backend请求开始，requestId {}",serverRequest.exchange().getRequest().getId());
+        return  airGatewayEngine.forwardToBackend(serverRequest);
     }
 }

@@ -21,7 +21,7 @@ import java.util.Map;
 
 @Slf4j
 @Component
-public class ApiInternalRequestConvertFilter  extends AbstractAirGatewayFilter {
+public class ApiInternalRequestConvertFilter extends AbstractAirGatewayFilter {
 
     private static final String INTERNET_PROTOCOL_TYPE = "internet_protocol_type";
     private static final String API_SOAP = "api_soap";
@@ -94,24 +94,23 @@ public class ApiInternalRequestConvertFilter  extends AbstractAirGatewayFilter {
         if (contentType != null && contentType.includes(MediaType.APPLICATION_JSON)) {
             exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, API_REST);
         }
-        exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, NOT_SUPPORT);
+        //todo 模拟为null的请求，调试使用，直接默认给Rest
+        if (contentType == null) {
+            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, API_REST);
+        } else {
+            exchangeAttributes.put(INTERNET_PROTOCOL_TYPE, NOT_SUPPORT);
+        }
     }
 
     private String transformSoapContent(String originalContent, ServerWebExchange exchange) {
         // todo SOAP 请求转换逻辑
         // 例如：添加认证头、修改端点等
-        return originalContent.replace(
-                "<soap:Envelope",
-                "<soap:Envelope xmlns:custom=\"http://custom.namespace\""
-        );
+        return new String("successful ! this is the api-soap response info!");
     }
 
     private String transformRestContent(String originalContent, ServerWebExchange exchange) {
         // todo  请求转换逻辑
-        return originalContent.replace(
-                "<soap:Envelope",
-                "<soap:Envelope xmlns:custom=\"http://custom.namespace\""
-        );
+        return new String("successful ! this is the api-rest response info!");
     }
 
     @Override
