@@ -1,4 +1,4 @@
-package com.airfree.access.config;
+package com.airfree.access;
 
 import com.airfree.core.engine.AirGatewayEngine;
 import lombok.extern.slf4j.Slf4j;

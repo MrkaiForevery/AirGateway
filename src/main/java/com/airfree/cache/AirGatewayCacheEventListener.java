@@ -1,10 +1,13 @@
-package com.airfree.log;
+package com.airfree.cache;
 
 
-public interface AirGatewayLogListener<T extends AirGatewayAbstractLogEvent>  {
+public interface AirGatewayCacheEventListener<T extends AirGatewayAbstractCacheEvent>  {
 
-    void onLogRecordFish(T event);
-    void onLogRecordError(T event);
+    void onCacheRefresh(T event);
+
+    void onCacheEvict(T event);
+
+    void onCacheLoad(T event);
 
     /**
      * 支持的缓存名称模式，支持通配符
