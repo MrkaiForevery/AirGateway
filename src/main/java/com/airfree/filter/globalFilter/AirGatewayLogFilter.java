@@ -30,6 +30,7 @@ import java.util.Map;
  */
 
 @Slf4j
+@Component
 @Order(Ordered.HIGHEST_PRECEDENCE - 1)
 public class AirGatewayLogFilter implements WebFilter {
 

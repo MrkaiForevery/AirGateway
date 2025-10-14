@@ -1,7 +1,9 @@
-package com.airfree.mq.cofig;
+package com.airfree.mq.core;
 
 import com.airfree.cache.AirGatewayCacheEventListener;
 import com.airfree.cache.event.cofngReflushEvent.MqConfigFlushEvent;
+import com.airfree.mq.cofig.AbstractAirMqConfig;
+import com.airfree.mq.cofig.AbstractAirMqConfigLoader;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
@@ -69,18 +71,13 @@ public class AirMqConfigManager implements AirGatewayCacheEventListener<MqConfig
     }
 
     @Override
-    public void onCacheRefresh(MqConfigFlushEvent event) {
-        log.info("监听到mq配置缓存刷新事件，正在处理中......");
-    }
-
-    @Override
-    public void onCacheEvict(MqConfigFlushEvent event) {
+    public void onLocalReFlush(MqConfigFlushEvent event) {
 
     }
 
     @Override
-    public void onCacheLoad(MqConfigFlushEvent event) {
-        log.info("监听到mq配置缓存加载事件，正在处理中......");
+    public void onRedisReFlush(MqConfigFlushEvent event) {
+
     }
 
     @Override

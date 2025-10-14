@@ -1,13 +1,10 @@
 package com.airfree.cache;
 
+public interface AirGatewayCacheEventListener<T extends AirGatewayAbstractCacheEvent> {
 
-public interface AirGatewayCacheEventListener<T extends AirGatewayAbstractCacheEvent>  {
+    void onLocalReFlush(T event);
 
-    void onCacheRefresh(T event);
-
-    void onCacheEvict(T event);
-
-    void onCacheLoad(T event);
+    void onRedisReFlush(T event);
 
     /**
      * 支持的缓存名称模式，支持通配符

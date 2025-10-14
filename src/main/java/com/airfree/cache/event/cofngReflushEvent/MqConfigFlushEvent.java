@@ -1,23 +1,30 @@
 package com.airfree.cache.event.cofngReflushEvent;
 
 import com.airfree.cache.AirGatewayAbstractCacheEvent;
-import com.airfree.cache.AirGatewayRefreshType;
+import com.airfree.cache.cacheEnums.AirGatewayCacheEventOperationEnum;
 import com.airfree.monitor.actuator.AirGatewayJavaClock;
+import com.airfree.mq.cofig.AbstractAirMqConfig;
+import com.airfree.mq.cofig.rocketMq.AirRocketMqConfig;
+import com.airfree.mq.mqEnums.MqTypeEnum;
+import lombok.Getter;
+import lombok.Setter;
 
-public class MqConfigFlushEvent extends AirGatewayAbstractCacheEvent {
+@Getter
+@Setter
+public class MqConfigFlushEvent extends AirGatewayAbstractCacheEvent<String, AbstractAirMqConfig> {
 
-    private final AirGatewayRefreshType refreshType;
-    private final Object key;
-    private final String reason;
+    private final MqTypeEnum mqTypeEnum;
+    private final boolean isAllowRefreshed;
 
-    public MqConfigFlushEvent(Object source,  AirGatewayJavaClock clock, String cacheName, AirGatewayRefreshType refreshType, Object key,String reason) {
-        super(source, clock, cacheName);
-        this.refreshType = refreshType;
-        this.key = key;
-        this.reason = reason;
+    public MqConfigFlushEvent(Object source,
+                              AirGatewayJavaClock clock,
+                              AirGatewayCacheEventOperationEnum operation,
+                              String airGatewayCacheKey,
+                              AbstractAirMqConfig airGatewayCacheValue,
+                              String reason,
+                              MqTypeEnum mqTypeEnum) {
+        super(source, clock, operation, airGatewayCacheKey, airGatewayCacheValue, reason);
+        this.isAllowRefreshed = false;
+        this.mqTypeEnum = mqTypeEnum;
     }
-
-    public AirGatewayRefreshType getRefreshType() { return refreshType; }
-    public Object getKey() { return key; }
-    public String getReason() { return reason; }
 }

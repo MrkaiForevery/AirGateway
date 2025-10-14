@@ -12,7 +12,8 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-@Order(Ordered.HIGHEST_PRECEDENCE - 2) // 在日志过滤器之前执行
+// 在日志过滤器之前执行,这里指的是过滤器执行的顺序，不是加载的顺序
+@Order(Ordered.HIGHEST_PRECEDENCE - 2)
 public class AirGatewayMetricsFilter implements WebFilter {
 
     private final AirGatewayMetricsCollector metricsCollector;

@@ -30,7 +30,8 @@ public class AirGatewayEndpointConfig {
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public RouterFunction<ServerResponse> airGatewayEndpoint() {
-        log.info("🚀 初始化最高优先级网关路由");
+        //todo 这里启动这个路由之前需要判断缓存加载是否就绪，mq初始化是否就绪，监控数据库连接是否就绪,等一些前置启动检查工作；
+        log.info("🚀 前置初始化就绪工作已完成，开始初始化最高优先级网关路由.....");
         return RouterFunctions
                 .route(RequestPredicates.path("/api/**"), this::handleApiRequest)
                 .andRoute(RequestPredicates.path("/admin/**"), this::handleAdminRequest)

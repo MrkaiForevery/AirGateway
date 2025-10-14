@@ -16,6 +16,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.List;
 
 @Slf4j
+@Component
 public class DefaultAirGatewayLogStorage implements AirGatewayLogStorage {
 
     private final AirGatewayLogProperties properties;
@@ -27,6 +28,7 @@ public class DefaultAirGatewayLogStorage implements AirGatewayLogStorage {
 
     public DefaultAirGatewayLogStorage(AirGatewayLogProperties properties) {
         this.properties = properties;
+        log.info("DefaultAirGatewayLogStorage初始化完成！");
     }
 
     @Override

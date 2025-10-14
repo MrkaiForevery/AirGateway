@@ -7,8 +7,11 @@ import com.airfree.log.event.AirGatewayErrorEvent;
 import com.airfree.log.event.AirGatewayLogEvent;
 import com.airfree.monitor.actuator.AirGatewayJavaClock;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -18,11 +21,14 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Component
 public class AirGatewayLogPublisher {
 
     private final AirGatewayLogStorage logStorage;
     private final AirGatewayLogProperties properties;
-    private final MeterRegistry meterRegistry;
+    //todo 这里先注入一个CompositeMeterRegistry()
+    private final MeterRegistry meterRegistry = new CompositeMeterRegistry();
+
     private final ApplicationEventPublisher eventPublisher;
     private final AirGatewayJavaClock clock;
 
@@ -31,12 +37,12 @@ public class AirGatewayLogPublisher {
 
     public AirGatewayLogPublisher(AirGatewayLogStorage logStorage,
                                   AirGatewayLogProperties properties,
-                                  MeterRegistry meterRegistry,
+//                                  MeterRegistry meterRegistry,
                                   ApplicationEventPublisher eventPublisher,
                                   AirGatewayJavaClock clock) {
         this.logStorage = logStorage;
         this.properties = properties;
-        this.meterRegistry = meterRegistry;
+//        this.meterRegistry = new CompositeMeterRegistry();
         this.eventPublisher = eventPublisher;
         this.logScheduler = Schedulers.newBoundedElastic(
                 properties.getLogThreadPoolSize(),
@@ -44,6 +50,7 @@ public class AirGatewayLogPublisher {
                 "gateway-log"
         );
         this.clock = clock;
+        log.info("AirGatewayLogPublisher 初始化完成");
     }
 
     public void publishAccessLog(AirGatewayLog gatewayLog) {

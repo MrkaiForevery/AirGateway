@@ -2,10 +2,10 @@ package com.airfree.listener;
 
 import com.airfree.cache.AirGatewayAbstractCacheEvent;
 import com.airfree.cache.AirGatewayCacheEventListener;
+import com.airfree.cache.cacheEnums.AirGatewayCacheEventOperationEnum;
 import com.airfree.log.AirGatewayAbstractLogEvent;
 import com.airfree.log.AirGatewayLogListener;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
@@ -26,19 +26,30 @@ public class AirGatewayEventDispatcher implements ApplicationListener<Applicatio
     //缓存监听器集合,只监听log刷新类事件
     private final List<AirGatewayLogListener<?>> logEventListenerList = new CopyOnWriteArrayList<>();
 
+    private final static String localCacheDependBase = AirGatewayCacheEventOperationEnum.DEPEND_BASE_LOCAL_ADD.getDependBase();
+    private final static String redisCacheDependBase = AirGatewayCacheEventOperationEnum.DEPEND_BASE_REDIS_ADD.getDependBase();
 
-    @Autowired(required = false)
-    public void setCacheListeners(List<AirGatewayCacheEventListener<?>> listeners) {
+
+    public AirGatewayEventDispatcher(List<AirGatewayCacheEventListener<?>> cacheEventListenerList,
+                                     List<AirGatewayLogListener<?>> logEventListenerList) {
+        setCacheListeners(cacheEventListenerList);
+        setLogListeners(logEventListenerList);
+        log.info("AirGatewayEventDispatcher事件分发器初始化成功！！！");
+    }
+
+    private void setCacheListeners(List<AirGatewayCacheEventListener<?>> listeners) {
         this.cacheEventListenerList.clear();
         this.cacheEventListenerList.addAll(listeners);
         this.cacheEventListenerList.sort(Comparator.comparing(AirGatewayCacheEventListener::getOrder));
+        log.info("注册全部的cacheEventListenerList: " + this.cacheEventListenerList);
     }
 
-    @Autowired(required = false)
-    public void setLogListeners(List<AirGatewayLogListener<?>> listeners) {
+
+    private void setLogListeners(List<AirGatewayLogListener<?>> listeners) {
         this.logEventListenerList.clear();
         this.logEventListenerList.addAll(listeners);
         this.logEventListenerList.sort(Comparator.comparing(AirGatewayLogListener::getOrder));
+        log.info("注册全部的logEventListenerList: " + this.logEventListenerList);
     }
 
     @Override
@@ -66,12 +77,24 @@ public class AirGatewayEventDispatcher implements ApplicationListener<Applicatio
         }
     }
 
-    private <T extends AirGatewayAbstractCacheEvent> void invokeCacheTypeListener(AirGatewayCacheEventListener<T> listener, ApplicationEvent event) {
-        listener.onCacheRefresh((T) event);
+    private <T extends AirGatewayAbstractCacheEvent> void invokeCacheTypeListener(AirGatewayCacheEventListener<T> listener, ApplicationEvent event) throws Exception {
+        T airGatewayAbstractCacheEvent = (T) event;
+        AirGatewayCacheEventOperationEnum operation = airGatewayAbstractCacheEvent.getOperation();
+        if (operation == null || operation.getDependBase() == null) {
+            throw new Exception("不支持cache刷新操作类型，停止刷新！！！");
+        }
+        String dependBase = operation.getDependBase();
+        if (localCacheDependBase.equals(dependBase)) {
+            listener.onLocalReFlush(airGatewayAbstractCacheEvent);
+        }
+
+        if (redisCacheDependBase.equals(dependBase)) {
+            listener.onRedisReFlush(airGatewayAbstractCacheEvent);
+        }
     }
 
     private <T extends AirGatewayAbstractLogEvent> void invokeLogEventListener(AirGatewayLogListener<T> listener, ApplicationEvent event) {
-
+        //TODO 待完成
         listener.onLogRecordFish((T) event);
     }
 
@@ -79,6 +102,4 @@ public class AirGatewayEventDispatcher implements ApplicationListener<Applicatio
     public boolean supportsAsyncExecution() {
         return ApplicationListener.super.supportsAsyncExecution();
     }
-
-
 }

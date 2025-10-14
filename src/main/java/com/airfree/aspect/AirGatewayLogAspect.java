@@ -3,6 +3,7 @@ package com.airfree.aspect;
 import com.airfree.annotation.log.AirGatewayLogAnnotation;
 import com.airfree.log.core.AirGatewayLogPublisher;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -27,15 +28,17 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Aspect
+@Component
 public class AirGatewayLogAspect {
 
     private final AirGatewayLogPublisher logPublisher;
-    private final MeterRegistry meterRegistry;
+    //todo 这个先不通过构造方法注入，先使用自己new出来CompositeMeterRegistry()搞一下
+    private final MeterRegistry meterRegistry = new CompositeMeterRegistry();
 
-    public AirGatewayLogAspect(AirGatewayLogPublisher logPublisher,
-                               MeterRegistry meterRegistry) {
+    public AirGatewayLogAspect(AirGatewayLogPublisher logPublisher) {
         this.logPublisher = logPublisher;
-        this.meterRegistry = meterRegistry;
+//        this.meterRegistry = meterRegistry;
+        log.info("AirGatewayLogAspect初始化完成");
     }
 
     /**
