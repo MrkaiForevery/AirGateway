@@ -7,14 +7,44 @@ spring:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
+        namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
+        group: AIR_GROUP
         username: dev
         password: 123456
-        group: AIR_GROUP
+        cluster-name: AirGatewayCluster
       config:
         server-addr: 127.0.0.1:8848
+        namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
+        group: AIR_GROUP
         username: dev
         password: 123456
-        file-extension: yaml
-        namespace: 5a54db3d-143d-4bec-b89a-7b1ae95eab80
-        group: AIR_GROUP
+        file-extension: yaml,properties
+        cluster-name: AirGatewayCluster
+
+seata:
+  application-id: AirGateway
+  tx-service-group: AIR_TX_GROUP
+  service:
+    vgroup-mapping:
+      AIR_TX_GROUP: AirSeataCluster #这个地方必须要在nacos的关于seata的配置文件里面找到，它才能映射
+  config:
+    type: nacos
+    nacos:
+      server-addr: 127.0.0.1:8848
+      namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
+      group: AIR_GROUP
+      username: dev
+      password: 123456
+      data-id: seataServer.properties #这里是指seata客户端要从nacos里面的哪个配置文件里面读取配置信息
+  registry:
+    type: nacos
+    nacos:
+      server-addr: 127.0.0.1:8848
+      namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
+      group: AIR_GROUP
+      username: dev
+      password: 123456
+      application: SeataServer
+
+
 
