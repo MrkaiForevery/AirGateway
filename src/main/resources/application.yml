@@ -1,6 +1,11 @@
 server:
   port: 10101
 
+logging:
+  level:
+    com.alibaba.cloud.nacos: DEBUG
+    com.alibaba.nacos: DEBUG
+
 #自定义log系统参数配置
 air-gateway:
   log:

@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: AirGateway
+  config:
+    import: optional:nacos:${spring.application.name}?refresh=true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
+        username: dev
+        password: 123456
+        group: AIR_GROUP
+      config:
+        server-addr: 127.0.0.1:8848
+        username: dev
+        password: 123456
+        file-extension: yaml
+        namespace: 5a54db3d-143d-4bec-b89a-7b1ae95eab80
+        group: AIR_GROUP
+

@@ -3,7 +3,7 @@ package com.airfree.monitor.endPoint;
 import com.airfree.monitor.collector.AirGatewayMetricsCollector;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.prometheusmetrics.PrometheusMeterRegistry;
+import io.micrometer.prometheus.PrometheusMeterRegistry;
 import jakarta.annotation.Resource;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 public class AirGatewayCustomMetricsEndpoint {
 
     @Resource
-    private  PrometheusMeterRegistry meterRegistry;
+    private PrometheusMeterRegistry meterRegistry;
     private final AirGatewayMetricsCollector metricsCollector;
 
 
