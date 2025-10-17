@@ -2,7 +2,8 @@ spring:
   application:
     name: AirGateway
   config:
-    import: optional:nacos:${spring.application.name}?refresh=true
+    import:
+      - nacos:airRocketMQConfigProperties.yaml?refresh=true #2023.0.3版本需要这样导入，不然会有读取不到配置的情况
   cloud:
     nacos:
       discovery:
@@ -18,8 +19,13 @@ spring:
         group: AIR_GROUP
         username: dev
         password: 123456
-        file-extension: yaml,properties
+        file-extension: yaml
         cluster-name: AirGatewayCluster
+        extension-configs:
+          - data-id: airRocketMQConfigProperties.yaml  # RocketMQ 专用配置
+            group: AIR_GROUP
+            refresh: true
+
 
 seata:
   application-id: AirGateway
@@ -35,6 +41,7 @@ seata:
       group: AIR_GROUP
       username: dev
       password: 123456
+      file-extension: properties
       data-id: seataServer.properties #这里是指seata客户端要从nacos里面的哪个配置文件里面读取配置信息
   registry:
     type: nacos
@@ -46,5 +53,26 @@ seata:
       password: 123456
       application: SeataServer
 
-
-
+#rocketmq:
+#  nameserver: 127.0.0.1:9876
+#  producers:
+#    producerIC:
+#      group: producer-IC-group
+#      topics:
+#        topic1: producer-IC-group_topic_1
+#        topic2: producer-IC-group_topic_2
+#    producerTC:
+#      group: producer-TC-group
+#      topics: {}
+#    producer-SMS:
+#      group: producer-SMS-group
+#      topics: {}
+#    producer-TIMEOUT:
+#      group: producer-TIMEOUT-group
+#      topics: {}
+#  consumers:
+#    consumer-TIMEOUT:
+#      group: consumer-TIMEOUT-group
+#      topic: topic_TIMEOUT_topic
+#      tag: ""
+#      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"

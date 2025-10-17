@@ -3,8 +3,9 @@ server:
 
 logging:
   level:
-    com.alibaba.cloud.nacos: INFO
-    com.alibaba.nacos: INFO
+    com.airfee.mq: DEBUG
+    com.alibaba.cloud.nacos: DEBUG
+    com.alibaba.nacos: DEBUG
 
 #自定义log系统参数配置
 air-gateway:
