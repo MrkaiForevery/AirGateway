@@ -1,23 +1,69 @@
 rocketmq:
   nameserver: 127.0.0.1:9876
   producers:
-    producerIC:
-      group: producer-IC-group
+    producer-TC-order:
+      group: producer-TC-order-group
       topics:
-        topic1: producer-IC-group_topic_1
-        topic2: producer-IC-group_topic_2
-    producerTC:
-      group: producer-TC-group
-      topics: {}
-    producer-SMS:
-      group: producer-SMS-group
-      topics: {}
-    producer-TIMEOUT:
-      group: producer-TIMEOUT-group
-      topics: {}
+        TC_order_create_topic: TC_order_create_topic
+    producer-TC-order-expired:
+      group: producer-TC-order-expired-group
+      topics:
+        TC_order_expired_delay_topic: TC_order_expired_delay_topic
+    producer-TC-payment-expired:
+      group: producer-TC-payment-group
+      topics:
+        TC_Payment_topic: TC_order_expired_delay_topic
+    producer-SESSION:
+      group: producer-SESSION-group
+      topics:
+        session_expired_delay_topic: session_expired_delay_topic
+    producer-NOTIFICATION-sms:
+      group: producer-notification-sms-group
+      topics:
+        sms_notification_topic: sms_notification_topic
+        web_notification_web_topic:  pc_notification_web_topic
   consumers:
-    consumer-TIMEOUT:
-      group: consumer-TIMEOUT-group
-      topic: topic_TIMEOUT_topic
-      tag: ""
+    consumer-TC-order:
+      group: consumer-TC-order-group
+      topic: TC_order_create_topic
+      tags:
+        create-tag:
+          tagName: CREATE
+        pay-success-tag: PAY_SUCCESS
+        cancel-tag: CANCEL
+      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      instanceNums: 2
+    consumer-TC-order-expired:
+      group: consumer-TC-order-expired-group
+      topic: TC_order_expired_delay_topic
+      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+    consumer-TC-payment-expired:
+      group: consumer-TC-payment-expired-group
+      topic: TC_Payment_topic
+      tags:
+        P2P-tag: P2P
+        B2B-tag: B2B
+        P2B-tag: P2B
+        B2P-TAG: B2P
+      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+    consumer-SESSION-expired:
+      group: consumer-SESSION-expired-group
+      topic: session_expired_delay_topic
+      tags:
+        pc-tag: pc
+        mobile-tag: mobile
+      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+    consumer-NOTIFICATION-SMS:
+      group: consumer-NOTIFICATION-SMS-group
+      topic: sms_notification_topic
+      tags:
+        order-tag: order
+        payment-tag: payment
+      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+    consumer-NOTIFICATION-WEB:
+      group: consumer-NOTIFICATION-WEB-group
+      topic: pc_notification_topic
+      tags:
+        order-tag: order
+        payment-tag: payment
       listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
