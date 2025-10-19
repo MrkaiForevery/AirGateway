@@ -3,7 +3,7 @@ spring:
     name: AirGateway
   config:
     import:
-      - nacos:airRocketMQConfigProperties.yaml?refresh=true #2023.0.3版本需要这样导入，不然会有读取不到配置的情况
+      - nacos:airRocketMQConfigProperties.yaml?refresh=true
   cloud:
     nacos:
       discovery:

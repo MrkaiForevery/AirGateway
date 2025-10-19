@@ -104,6 +104,7 @@ public class AirRocketMqBatchConsumerFactory {
         for (int i = 0; i < instanceNums; i++) {
             createSingleConsumerInstanceAndStartIt(config, i);
         }
+        log.info("构建同一消费者实例成功！。。。。");
     }
 
     private void createSingleConsumerInstanceAndStartIt(ConsumerConfig config, int index) throws ClassNotFoundException {

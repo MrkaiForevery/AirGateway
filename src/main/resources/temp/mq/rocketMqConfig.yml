@@ -27,8 +27,7 @@ rocketmq:
       group: consumer-TC-order-group
       topic: TC_order_create_topic
       tags:
-        create-tag:
-          tagName: CREATE
+        create-tag: CREATE
         pay-success-tag: PAY_SUCCESS
         cancel-tag: CANCEL
       listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
