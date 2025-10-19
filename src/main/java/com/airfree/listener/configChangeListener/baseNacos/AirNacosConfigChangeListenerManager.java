@@ -35,6 +35,7 @@ public class AirNacosConfigChangeListenerManager {
         elementTypes.forEach(e -> {
             AbstractConfigChangeListener listener = applicationContext.getBeansOfType(e.getListenerClass()).values().stream().collect(Collectors.toList()).get(0);
             try {
+                //todo 这里必须要先把listener注册到nacosConfigManager里面，不然监听不到配置变化。
                 this.nacosConfigManager.getConfigService().addListener(e.getDataId(), e.getGroup(), listener);
                 listenerMap.put(e.getListenerClass(), listener);
                 log.info("构建nacosConfig-istener成功！信息为:{}", listener);
