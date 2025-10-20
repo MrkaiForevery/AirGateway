@@ -38,7 +38,7 @@ public class AirNacosConfigChangeListenerManager {
                 //todo 这里必须要先把listener注册到nacosConfigManager里面，不然监听不到配置变化。
                 this.nacosConfigManager.getConfigService().addListener(e.getDataId(), e.getGroup(), listener);
                 listenerMap.put(e.getListenerClass(), listener);
-                log.info("构建nacosConfig-istener成功！信息为:{}", listener);
+                log.info("构建nacosConfig-listener成功！信息为:{}", listener);
             } catch (NacosException ex) {
                 log.error("构建nacosConfig-listener失败！信息为:{}", listener);
                 ex.printStackTrace();

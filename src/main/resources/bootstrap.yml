@@ -4,6 +4,8 @@ spring:
   config:
     import:
       - nacos:airRocketMQConfigProperties.yaml?refresh=true
+      - nacos:airRedissonConfig.yaml?refresh=true
+      - nacos:airMongoDbConfig.yaml?refresh=true-
   cloud:
     nacos:
       discovery:
@@ -25,7 +27,12 @@ spring:
           - data-id: airRocketMQConfigProperties.yaml  # RocketMQ 专用配置
             group: AIR_GROUP
             refresh: true
-
+          - data-id: airRedissonConfig.yaml  # redisson 专用配置
+            group: AIR_GROUP
+            refresh: true
+          - data-id: airMongoDbConfig.yaml  # mongodb 专用配置
+            group: AIR_GROUP
+            refresh: true
 
 seata:
   application-id: AirGateway

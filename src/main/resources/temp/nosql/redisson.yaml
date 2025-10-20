@@ -1,0 +1,20 @@
+redisson:
+  singleConfig: |
+    singleServerConfig:
+      address: "redis://127.0.0.1:6379"
+      password:
+      database: 0
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+    transportMode: NIO
+    threads: 16
+    nettyThreads: 16
+    lockWatchdogTimeout: 30000
+  clusterConfig: |
+    clusterServersConfig:
+      nodeAddresses:
+        - "redis://127.0.0.1:6379"
+        - "redis://127.0.0.1:6379"
+      scanInterval: 2000
+    codec: !<org.redisson.codec.JsonJacksonCodec> {}
+    transportMode: EPOLL
+  mode: single
