@@ -1,0 +1,12 @@
+flowControl:
+  pipelines:
+    order-process:
+      - operator: rateLimit
+        resource: order.create
+        qps: 100
+      - operator: circuitBreaker
+        resource: order.service
+        failureThreshold: 0.5
+      - operator: degradeOnCondition
+        resource: order.sla
+        maxResponseTime: 5000

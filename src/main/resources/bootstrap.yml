@@ -5,7 +5,8 @@ spring:
     import:
       - nacos:airRocketMQConfigProperties.yaml?refresh=true
       - nacos:airRedissonConfig.yaml?refresh=true
-      - nacos:airMongoDbConfig.yaml?refresh=true-
+      - nacos:airMongoDbConfig.yaml?refresh=true
+      - nacos:airFlowControl.yaml?refresh=true
   cloud:
     nacos:
       discovery:
@@ -31,6 +32,9 @@ spring:
             group: AIR_GROUP
             refresh: true
           - data-id: airMongoDbConfig.yaml  # mongodb 专用配置
+            group: AIR_GROUP
+            refresh: true
+          - data-id: airFlowControl.yaml  # flow策略 专用配置
             group: AIR_GROUP
             refresh: true
 
