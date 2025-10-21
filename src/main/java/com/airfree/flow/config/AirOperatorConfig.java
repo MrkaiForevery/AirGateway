@@ -1,15 +1,11 @@
 package com.airfree.flow.config;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.Data;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Setter
-@Getter
-@NoArgsConstructor
+@Data
 public class AirOperatorConfig {
 
     private String operator;

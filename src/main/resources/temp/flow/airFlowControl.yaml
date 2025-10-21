@@ -1,12 +1,22 @@
-flowControl:
+flow-control:
   pipelines:
     order-process:
       - operator: rateLimit
         resource: order.create
-        qps: 100
+        config:
+          qps: 100
+        orderId: 0
       - operator: circuitBreaker
         resource: order.service
-        failureThreshold: 0.5
+        config:
+          failureRateThreshold: 10
+          waitDurationInOpenState: 30000
+          permittedNumberOfCallsInHalfOpenState: 50
+          slidingWindowSize: 60
+          minimumNumberOfCalls: 5
+        orderId: 1
       - operator: degradeOnCondition
         resource: order.sla
-        maxResponseTime: 5000
+        config:
+          maxResponseTime: 5000
+        orderId: 2
