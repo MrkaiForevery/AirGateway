@@ -12,7 +12,7 @@ rocketmq:
     producer-TC-payment-expired:
       group: producer-TC-payment-group
       topics:
-        TC_Payment_topic: TC_order_expired_delay_topic
+        TC_payment_topic: TC_payment_topic
     producer-SESSION:
       group: producer-SESSION-group
       topics:
@@ -21,7 +21,7 @@ rocketmq:
       group: producer-notification-sms-group
       topics:
         sms_notification_topic: sms_notification_topic
-        web_notification_web_topic:  pc_notification_web_topic
+        web_notification_web_topic:  web_notification_web_topic
   consumers:
     consumer-TC-order:
       group: consumer-TC-order-group
@@ -38,7 +38,7 @@ rocketmq:
       listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
     consumer-TC-payment-expired:
       group: consumer-TC-payment-expired-group
-      topic: TC_Payment_topic
+      topic: TC_payment_topic
       tags:
         P2P-tag: P2P
         B2B-tag: B2B
@@ -61,7 +61,7 @@ rocketmq:
       listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
     consumer-NOTIFICATION-WEB:
       group: consumer-NOTIFICATION-WEB-group
-      topic: pc_notification_topic
+      topic: web_notification_web_topic
       tags:
         order-tag: order
         payment-tag: payment

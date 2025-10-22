@@ -50,7 +50,7 @@ public class RocketMqConfigChangeListener extends AbstractConfigChangeListener {
             try {
                 consumerFactory.buildOneTypeConsumer(config.getValue());
                 log.info("构建新增加的consumers成功！！！");
-            } catch (ClassNotFoundException e) {
+            } catch (Exception e) {
                 log.info("构建新增加的consumers失败！！！");
                 e.printStackTrace();
             }

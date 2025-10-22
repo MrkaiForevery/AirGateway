@@ -4,6 +4,7 @@ import com.airfree.mq.cofig.rocketMq.AirRocketMQConfigProperties;
 import com.airfree.mq.cofig.rocketMq.ProducerConfig;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.stereotype.Component;
@@ -39,7 +40,19 @@ public class AirRocketMqBatchProducerFactory {
             List<String> topics = producerConfig.getTopics().values().stream().collect(Collectors.toList());
             Assert.isTrue(topics.size() != 0, entry.getKey() + "producer topics configuration cannot be null");
             DefaultMQProducer defaultMQProducer = new DefaultMQProducer(producerConfig.getGroup());
+            defaultMQProducer.setNamesrvAddr(this.rocketMQConfigProperties.getNameServer());
+            String topicsJoinString = String.join("#", producerConfig.getTopics().values());
+            defaultMQProducer.setInstanceName("group["+producerConfig.getGroup() + "]--->topic[" + topicsJoinString +"]");
             defaultMQProducer.setTopics(topics);
+            // todo 关键：启动生产者
+            try {
+                defaultMQProducer.start();
+                log.info("RocketMQ Producer启动成功，group: {}", producerConfig.getGroup());
+            } catch (MQClientException e) {
+                log.error("RocketMQ Producer启动失败，group: {}, 错误: {}", producerConfig.getGroup(), e.getMessage());
+                throw new RuntimeException("RocketMQ Producer启动失败", e);
+            }
+
             template.setProducer(defaultMQProducer);
             this.producerRocketMQTemplateMap.put(entry.getKey(), template);
             log.info("开始创建RocketMqProducer成功，group:{} producerName:{}  topics信息:{}", producerConfig.getGroup(), entry.getKey(), topics);

@@ -6,16 +6,18 @@ import com.airfree.mq.index.ConsumerIndex;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
+import org.apache.rocketmq.client.consumer.MQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerOrderly;
-import org.apache.rocketmq.spring.support.DefaultRocketMQListenerContainer;
+import org.apache.rocketmq.client.exception.MQClientException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -24,7 +26,7 @@ public class AirRocketMqBatchConsumerFactory {
 
     private final AirRocketMQConfigProperties rocketMQConfigProperties;
     private final ApplicationContext applicationContext;
-    private final Map<ConsumerIndex, DefaultRocketMQListenerContainer> consumerContainers = new ConcurrentHashMap<>();
+    private final Map<ConsumerIndex, MQPushConsumer> consumerContainers = new ConcurrentHashMap<>();
 
     public AirRocketMqBatchConsumerFactory(AirRocketMQConfigProperties rocketMQConfigProperties, ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
@@ -45,70 +47,19 @@ public class AirRocketMqBatchConsumerFactory {
 
     }
 
-    //精确控制某个instance的重新构建和启动
-    public synchronized int startContainerInstancePreciseByRebuildInstance(ConsumerIndex index){
-        AtomicInteger atomicInteger = new AtomicInteger(0);
-        this.consumerContainers.entrySet().forEach(entry ->{
-            if (index.isSameConsumerInstance(entry.getKey())) {
-                if (entry.getValue().isRunning()) {
-                    log.info("consumer:{},index:{} 正在运行中，正在进行关闭....",entry.getValue(),index.getIndex());
-                    try {
-                        shutDownContainerInstancePrecise(index);
-                        log.info("consumer:{},index:{} 已关闭！！！！",entry.getValue(),index.getIndex());
-                    }catch (Exception e){
-                        atomicInteger.set(-1);
-                        log.info("consumer:{},index:{} 关闭失败！！！！",entry.getValue(),index.getIndex());
-                    }
-                }
-                try {
-                    log.info("consumer:{},index:{} 正在重新构建....", entry.getValue(), index.getIndex());
-                    createSingleConsumerInstanceAndStartIt(index.getConsumerConfig(), index.getIndex());
-                    log.info("consumer:{},index:{} 已重新构建并启动!!!", entry.getValue(), index.getIndex());
-                    atomicInteger.set(1);
-                }catch (Exception e){
-                    atomicInteger.set(-1);
-                    log.info("consumer:{},index:{} 重新构建失败!!!", entry.getValue(), index.getIndex());
-                }
-            }
-        });
-        return atomicInteger.get();
-    }
-
-    //精确控制某个instance的停止
-    public synchronized int shutDownContainerInstancePrecise(ConsumerIndex index){
-        AtomicInteger flag = new AtomicInteger(0);
-        this.consumerContainers.entrySet().forEach(entry ->{
-            if (index.isSameConsumerInstance(entry.getKey())) {
-                if (entry.getValue().isRunning()) {
-                    log.info("consumer:{},index:{} 正在运行中，正在进行关闭...",entry.getValue(),index.getIndex());
-                    try {
-                        shutdownConsumer(index);
-                        flag.set(1);
-                        log.info("consumer:{},index:{} 关闭成功！！！",entry.getValue(),index.getIndex());
-                    }catch (Exception e){
-                        flag.set(-1);
-                        log.info("consumer:{},index:{} 关闭失败!!!", entry.getValue(), index.getIndex());
-                    }
-                }
-            }
-        });
-        return flag.get();
-    }
-
-
-    public synchronized void buildOneTypeConsumer(ConsumerConfig config) throws ClassNotFoundException {
+    public synchronized void buildOneTypeConsumer(ConsumerConfig config) throws ClassNotFoundException, MQClientException {
         Integer instanceNums = 1;
         if (config.getInstanceNums() != null) {
             instanceNums = Integer.valueOf(config.getInstanceNums());
         }
         for (int i = 0; i < instanceNums; i++) {
-            //todo 这里只有监听新增加操作，因此不需要判断原有的consumer状态，然后stop it以后移除的操作
+            //这里只有监听新增加操作，因此不需要判断原有的consumer状态，然后stop it以后移除的操作
             createSingleConsumerInstanceAndStartIt(config, i);
         }
         log.info("构建同一消费者实例成功！。。。。");
     }
 
-    private void createSingleConsumerInstanceAndStartIt(ConsumerConfig config, int index) throws ClassNotFoundException {
+    private void createSingleConsumerInstanceAndStartIt(ConsumerConfig config, int index) throws ClassNotFoundException, MQClientException {
         MessageListenerConcurrently messageListenerConcurrently = null;
         MessageListenerOrderly listenerOrderly = null;
         if (config.getListenerClass() != null) {
@@ -125,60 +76,61 @@ public class AirRocketMqBatchConsumerFactory {
         } else {
             throw new RuntimeException("无法创建rocketMQListener:topic不能为null");
         }
-        DefaultRocketMQListenerContainer container = buildDefaultRocketMQListenerContainer(rocketMQConfigProperties.getNameServer(), config.getGroup(), config.getTopic(), config.getTags());
-        // todo 设置消费者参数
+        // 创建消费者
         DefaultMQPushConsumer consumer = new DefaultMQPushConsumer(config.getGroup());
         consumer.setNamesrvAddr(rocketMQConfigProperties.getNameServer());
+        // 设置实例名称，用于区分多个实例
+        consumer.setInstanceName(config.getGroup() + "-instance-" + index + System.currentTimeMillis());
+        // 配置消费者参数，避免频繁路由更新
+        configureConsumerForStability(consumer);
+        // 订阅Topic和Tag
+        String tags = StringUtils.collectionToDelimitedString(new ArrayList<>(config.getTags().values()), "||");
+        try {
+            consumer.subscribe(config.getTopic(), tags);
+        } catch (MQClientException e) {
+            throw new RuntimeException("订阅Topic失败", e);
+        }
+
         // 注册消费者的回调接口处理消息
         if (messageListenerConcurrently != null) {
             consumer.registerMessageListener(messageListenerConcurrently);
         } else if (listenerOrderly != null) {
             consumer.registerMessageListener(listenerOrderly);
         }
-        container.setConsumer(consumer);
-        container.start();
+        consumer.start();
         ConsumerIndex consumerIndex = new ConsumerIndex();
         consumerIndex.setConsumerConfig(config);
         consumerIndex.setIndex(index);
-        consumerContainers.put(consumerIndex, container);
+        consumerContainers.put(consumerIndex, consumer);
     }
 
-    private DefaultRocketMQListenerContainer buildDefaultRocketMQListenerContainer(String nameServer, String consumerGroup, String topic, Map<String, String> tags) {
-
-        DefaultRocketMQListenerContainer container = new DefaultRocketMQListenerContainer();
-        container.setNameServer(nameServer);
-        container.setConsumerGroup(consumerGroup);
-        container.setTopic(topic);
-        StringBuilder selectorExpression = new StringBuilder();
-        if (tags.size() > 0) {
-            List<String> tagList = tags.values().stream().collect(Collectors.toList());
-            for (int i = 0; i < tagList.size(); i++) {
-                selectorExpression.append(tagList.get(i));
-                if (tagList.get(i) != null) {
-                    selectorExpression.append("||");
-                }
-            }
-        }
-        if ( selectorExpression.toString() != null && selectorExpression.toString() != "" ) {
-            container.setSelectorExpression(selectorExpression.toString());
-        }
-        return container;
+    private void configureConsumerForStability(DefaultMQPushConsumer consumer) {
+        // 减少路由拉取间隔
+         consumer.setPollNameServerInterval(10000); // 10秒
+        // 设置心跳间隔
+        consumer.setHeartbeatBrokerInterval(10000); // 10秒
+        // 设置消费线程数
+        consumer.setConsumeThreadMin(5);
+        consumer.setConsumeThreadMax(10);
+        // 设置消费超时
+        consumer.setConsumeTimeout(15); // 15分钟
     }
+
 
     private void shutdownConsumer(ConsumerIndex index) {
-        DefaultRocketMQListenerContainer container = consumerContainers.get(index);
-        if (container != null) {
-            container.getConsumer().shutdown();
-            consumerContainers.remove(container);
-            log.info("消费者已关闭: {}", container);
+        MQPushConsumer mqPushConsumer = consumerContainers.get(index);
+        if (mqPushConsumer != null) {
+            mqPushConsumer.shutdown();
+            consumerContainers.remove(mqPushConsumer);
+            log.info("消费者已关闭: {}", mqPushConsumer);
         }
     }
 
     @PreDestroy
     public void destroy() {
         log.info("正在关闭所有 RocketMQ 消费者...");
-        consumerContainers.values().forEach(container -> {
-            container.getConsumer().shutdown();
+        consumerContainers.values().forEach(consumer -> {
+            consumer.shutdown();
         });
         consumerContainers.clear();
     }

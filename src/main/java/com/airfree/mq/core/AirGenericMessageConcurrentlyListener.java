@@ -5,7 +5,6 @@ import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
-import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,6 +21,9 @@ public class AirGenericMessageConcurrentlyListener implements MessageListenerCon
 
     @Override
     public ConsumeConcurrentlyStatus consumeMessage(List<MessageExt> msgs, ConsumeConcurrentlyContext context) {
-        return null;
+
+        log.info("已接收到消息{}",msgs);
+        //默认消费消息成功，需要给ack给到rocketmq
+        return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
     }
 }
