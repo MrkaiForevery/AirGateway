@@ -1,7 +1,21 @@
 mongodb:
+  applicationName: AirGateway
   authentication-database: airDatabase
   host: 127.0.0.1
   port: 27017
   username: airTest
   password: 123456
   database: airDatabase
+  poolConfig:
+    maxSize: 20
+    minSize: 5
+    maxWaitTime: 120000
+    maxConnectionLifeTime: 600000
+  socketConfig:
+    connectTimeout: 60000
+    readTimeout: 60000
+  serverConfig:
+    heartbeatFrequency: 10000
+    minHeartbeatFrequency: 500
+  sslConfig:
+    enable: false

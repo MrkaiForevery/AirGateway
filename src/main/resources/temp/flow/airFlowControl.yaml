@@ -2,11 +2,30 @@ flow-control:
   pipelines:
     order-process:
       - operator: rateLimit
+        algorithm: Resilience4j
         resource: order.create
         config:
-          qps: 100
+          limitForPeriod: 50
+          limitRefreshPeriod: 50000
+          timeoutDuration: 5
+          writableStackTraceEnabled: true
         orderId: 0
+      - operator: rateLimit
+        algorithm: TokenBucket
+        resource: order.create
+        config:
+          capacity: 200
+          refillRate: 200
+        orderId: 1
+      - operator: rateLimit
+        algorithm: SlidingWindow
+        resource: order.create
+        config:
+          windowSize: 60
+          maxRequests: 5000
+        orderId: 2
       - operator: circuitBreaker
+        algorithm: Resilience4j
         resource: order.service
         config:
           failureRateThreshold: 10
@@ -14,9 +33,10 @@ flow-control:
           permittedNumberOfCallsInHalfOpenState: 50
           slidingWindowSize: 60
           minimumNumberOfCalls: 5
-        orderId: 1
+        orderId: 3
       - operator: degradeOnCondition
+        algorithm: Resilience4j
         resource: order.sla
         config:
           maxResponseTime: 5000
-        orderId: 2
+        orderId: 4

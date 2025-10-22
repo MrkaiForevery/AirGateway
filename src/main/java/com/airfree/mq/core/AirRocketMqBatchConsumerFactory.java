@@ -102,6 +102,7 @@ public class AirRocketMqBatchConsumerFactory {
             instanceNums = Integer.valueOf(config.getInstanceNums());
         }
         for (int i = 0; i < instanceNums; i++) {
+            //todo 这里只有监听新增加操作，因此不需要判断原有的consumer状态，然后stop it以后移除的操作
             createSingleConsumerInstanceAndStartIt(config, i);
         }
         log.info("构建同一消费者实例成功！。。。。");

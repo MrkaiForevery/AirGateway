@@ -9,6 +9,7 @@ import java.util.Map;
 public class AirOperatorConfig {
 
     private String operator;
+    private String algorithm;
     private String resource;
     private Map<String, Object> config = new HashMap<>();
     private int orderId;

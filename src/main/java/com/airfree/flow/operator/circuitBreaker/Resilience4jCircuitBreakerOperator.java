@@ -19,14 +19,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 /**
- * 通用熔断操作器实现类*
- *
+ *  Resilience4j熔断操作器实现类
  * @param <T>
  */
 @Slf4j
-public class AirGeneralCircuitBreakerOperator<T> implements AirFlowControlOperator<T> {
+public class Resilience4jCircuitBreakerOperator<T> implements AirFlowControlOperator<T> {
 
-    private final String name;
     private final AirFlowControlType type;
     private final AirOperatorConfig config;
     private final String resource;
@@ -35,20 +33,19 @@ public class AirGeneralCircuitBreakerOperator<T> implements AirFlowControlOperat
     private final CircuitBreaker circuitBreaker;
     private final Function<Throwable, Mono<T>> fallbackFunction;
 
-    public AirGeneralCircuitBreakerOperator(String name,
+    public Resilience4jCircuitBreakerOperator(AirFlowControlType flowControlType,
                                             AirOperatorConfig config,
                                             Function<Throwable, Mono<T>> fallbackFunction) throws RuntimeException{
-        log.info("开始构建新的AirGeneralCircuitBreakerOperator....");
-        this.name = name;
-        this.type = AirFlowControlType.CIRCUIT_BREAKER;
+        log.info("开始构建新的 Resilience4jCircuitBreakerOperator....");
+        this.type = flowControlType;
         this.config = config;
         this.resource = config.getResource();
 
         //todo 这里默认用Resilience4j的CircuitBreaker
         CircuitBreakerConfig circuitBreakerConfig = buildResilience4jCircuitBreakerConfig(this.config);
-        this.circuitBreaker = CircuitBreaker.of(name, circuitBreakerConfig);
+        this.circuitBreaker = CircuitBreaker.of(flowControlType.getFlowTypeName()+"_"+flowControlType.getAlgorithm(), circuitBreakerConfig);
         this.fallbackFunction = fallbackFunction != null ? fallbackFunction : this::defaultFallback;
-        log.info("新的AirGeneralCircuitBreakerOperator构建完毕:{}",this);
+        log.info("新的Resilience4jCircuitBreakerOperator构建完毕:{}",this);
     }
 
 
@@ -124,7 +121,7 @@ public class AirGeneralCircuitBreakerOperator<T> implements AirFlowControlOperat
 
     @Override
     public String getName() {
-        return this.name;
+        return this.type.getFlowTypeName()+"_"+this.type.getAlgorithm();
     }
 
     @Override
@@ -135,9 +132,9 @@ public class AirGeneralCircuitBreakerOperator<T> implements AirFlowControlOperat
     @Override
     public Mono<T> apply(Mono<T> sourceMono) {
         // 检查熔断器状态
-        if (!circuitBreaker.tryAcquirePermission()) {
-            return fallbackFunction.apply(new AirCircuitBreakerOpenException(
-                    "Circuit breaker '" + name + "' is open"));
+        if (! this.circuitBreaker.tryAcquirePermission()) {
+            return this.fallbackFunction.apply(new AirCircuitBreakerOpenException(
+                    "Circuit breaker '" + this.type.getFlowTypeName() + "_" +this.type.getAlgorithm()+ "+' is open"));
         }
         final long start = System.nanoTime();
         return sourceMono
@@ -156,7 +153,7 @@ public class AirGeneralCircuitBreakerOperator<T> implements AirFlowControlOperat
     private Mono<T> defaultFallback(Throwable error) {
         if (error instanceof AirCircuitBreakerOpenException) {
             return Mono.error(new ServiceUnavailableException(
-                    "Service unavailable due to circuit breaker: " + name));
+                    "Service unavailable due to circuit breaker: " + this.type.getFlowTypeName() + "_" +this.type.getAlgorithm()));
         }
         return Mono.error(error);
     }
