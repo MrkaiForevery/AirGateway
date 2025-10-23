@@ -2,6 +2,7 @@ package com.airfree.mq.core;
 
 import com.airfree.mq.cofig.kafka.AirKafkaConfigProperties;
 import com.airfree.mq.cofig.kafka.KafkaProducerConfig;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import reactor.kafka.sender.KafkaSender;
@@ -49,5 +50,14 @@ public class AirKafkaBatchSenderFactory {
         KafkaSender<?, ?> sender = KafkaSender.create(senderOptions);
         kafkaSenderMap.put(senderName, sender);
         return sender;
+    }
+
+    @PreDestroy
+    public void destroy() {
+        log.info("正在销毁所有 Kafka-Producer 生产者...");
+        kafkaSenderMap.values().forEach(sender -> {
+            sender.close();
+        });
+        kafkaSenderMap.clear();
     }
 }

@@ -3,10 +3,12 @@ package com.airfree.mq.core;
 import com.airfree.mq.cofig.kafka.AirKafkaConfigProperties;
 import com.airfree.mq.cofig.kafka.KafkaConsumerConfig;
 import com.airfree.mq.core.listener.kafka.AirReactiveKafkaListener;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+import reactor.core.Disposable;
 import reactor.kafka.receiver.KafkaReceiver;
 import reactor.kafka.receiver.ReceiverOptions;
 
@@ -23,6 +25,7 @@ public class AirKafkaBatchReceiverFactory {
     private final AirKafkaConfigProperties kafkaConfigProperties;
     private final ApplicationContext applicationContext;
     private final Map<String, KafkaReceiver<?, ?>> kafkaReceiverMap = new ConcurrentHashMap<>();
+    private final Map<String, Disposable> subscriptionMap = new ConcurrentHashMap<>();
 
     public AirKafkaBatchReceiverFactory(ApplicationContext applicationContext, AirKafkaConfigProperties kafkaConfigProperties) {
         this.kafkaConfigProperties = kafkaConfigProperties;
@@ -121,7 +124,7 @@ public class AirKafkaBatchReceiverFactory {
         String listenerName = listenerInstance.getListenerName();
         log.info("正在绑定监听器: {} 到主题: {}", listenerName, topic);
 
-        kafkaReceiver.receive()
+        Disposable subscription = kafkaReceiver.receive()
                 .concatMap(record -> {
                     log.debug("开始处理消息 - Topic: {}, Key: {}", record.topic(), record.key());
                     return listenerInstance.onMessage(record)
@@ -136,7 +139,34 @@ public class AirKafkaBatchReceiverFactory {
                     log.error("消息处理流程发生错误: {}", error.getMessage(), error);
                 })
                 .subscribe();
-
+        subscriptionMap.put(listenerName + System.currentTimeMillis(), subscription);
         log.info("成功绑定监听器: {} 到主题: {}", listenerName, topic);
+    }
+
+
+    public void closeReceiver(String listenerName) {
+        // 1. 取消订阅，停止接收新消息
+        Disposable subscription = subscriptionMap.remove(listenerName);
+        if (subscription != null && !subscription.isDisposed()) {
+            subscription.dispose();
+            log.info("KafkaReceiver subscription for {} has been disposed.", listenerName);
+        }
+
+        // 2. 尝试关闭底层KafkaConsumer（如果能够访问到）
+        KafkaReceiver<?, ?> receiver = kafkaReceiverMap.remove(listenerName);
+        // 注意：Reactor Kafka的KafkaReceiver未直接提供关闭底层consumer的方法。
+        // 如果确实需要，你可能需要通过反射等机制获取其内部的KafkaConsumer并调用close()。
+        // 但通常取消订阅后，在应用关闭时相关资源会被GC回收。
+    }
+
+
+    @PreDestroy
+    public void destroy() {
+        log.info("Shutting down all KafkaReceivers...");
+        subscriptionMap.keySet().forEach(this::closeReceiver);
+        // 清空Map
+        subscriptionMap.clear();
+        kafkaReceiverMap.clear();
+        log.info("All KafkaReceivers have been shut down.");
     }
 }

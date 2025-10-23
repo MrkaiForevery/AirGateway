@@ -6,6 +6,7 @@ import com.mongodb.MongoClientSettings;
 import com.mongodb.MongoCompressor;
 import com.mongodb.reactivestreams.client.MongoClient;
 import com.mongodb.reactivestreams.client.MongoClients;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import org.springframework.stereotype.Component;
@@ -94,5 +95,12 @@ public class AirMongoDbClient {
         ));
 
         return settingsBuilder.build();
+    }
+
+    @PreDestroy
+    public void destroy() {
+        log.info("正在销毁所有 AirMongoDbClient...");
+        this.mongoClient.close();
+        this.mongoTemplate.remove(this.mongoClient);
     }
 }
