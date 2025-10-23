@@ -1,4 +1,4 @@
-package com.airfree.mq.core;
+package com.airfree.mq.core.listener.rocketMq;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -11,11 +11,11 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class AirGenericMessageConcurrentlyListener implements MessageListenerConcurrently {
+public class AirRocketmqMessageConcurrentlyListener implements MessageListenerConcurrently {
 
     private final String topic;
 
-    public AirGenericMessageConcurrentlyListener() {
+    public AirRocketmqMessageConcurrentlyListener() {
         this.topic = "topic_TIMEOUT_topic";
     }
 

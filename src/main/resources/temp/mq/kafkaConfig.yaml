@@ -1,0 +1,32 @@
+kafka:
+  producers:
+    producer-log:
+      bootstrap-servers: "127.0.0.1:9092"
+      key-serializer: "org.apache.kafka.common.serialization.IntegerSerializer"
+      value-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      batchSize: 16384
+      ack: "0"
+      bufferMemory: 33554432
+    producer-alarm:
+      bootstrap-servers: "127.0.0.1:9092"
+      key-serializer: "org.apache.kafka.common.serialization.StringSerializer"
+      value-serializer: "org.apache.kafka.common.serialization.ByteArraySerializer"
+      batchSize: 16384
+      ack: "1"
+      bufferMemory: 33554432
+  consumers:
+    consumer-log:
+      bootstrap-servers: "127.0.0.1:9092"
+      group-id: "consumer-air-log-group"
+      key-deserializer: "org.apache.kafka.common.serialization.IntegerDeserializer"
+      value-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+      topics: "air_log_topic"
+      listenerClass: "com.airfree.mq.core.listener.kafka.AirReactiveKafkaLogListener"
+      instanceNums: 2
+    consumer-alarm:
+      bootstrap-servers: "127.0.0.1:9092"
+      group-id: "consumer-air-alarm-group"
+      key-deserializer: "org.apache.kafka.common.serialization.StringDeserializer"
+      value-deserializer: "org.apache.kafka.common.serialization.ByteArrayDeserializer"
+      topics: "air_alarm_topic"
+      listenerClass: "com.airfree.mq.core.listener.kafka.AirReactiveKafkaLogListener"

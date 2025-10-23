@@ -30,12 +30,12 @@ rocketmq:
         create-tag: CREATE
         pay-success-tag: PAY_SUCCESS
         cancel-tag: CANCEL
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"
       instanceNums: 2
     consumer-TC-order-expired:
       group: consumer-TC-order-expired-group
       topic: TC_order_expired_delay_topic
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"
     consumer-TC-payment-expired:
       group: consumer-TC-payment-expired-group
       topic: TC_payment_topic
@@ -44,25 +44,25 @@ rocketmq:
         B2B-tag: B2B
         P2B-tag: P2B
         B2P-TAG: B2P
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"
     consumer-SESSION-expired:
       group: consumer-SESSION-expired-group
       topic: session_expired_delay_topic
       tags:
         pc-tag: pc
         mobile-tag: mobile
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"
     consumer-NOTIFICATION-SMS:
       group: consumer-NOTIFICATION-SMS-group
       topic: sms_notification_topic
       tags:
         order-tag: order
         payment-tag: payment
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"
     consumer-NOTIFICATION-WEB:
       group: consumer-NOTIFICATION-WEB-group
       topic: web_notification_web_topic
       tags:
         order-tag: order
         payment-tag: payment
-      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirRocketmqMessageConcurrentlyListener"

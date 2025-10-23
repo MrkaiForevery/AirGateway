@@ -7,6 +7,7 @@ spring:
       - nacos:airRedissonConfig.yaml?refresh=true
       - nacos:airMongoDbConfig.yaml?refresh=true
       - nacos:airFlowControl.yaml?refresh=true
+      - nacos:airKafkaConfigProperties.yaml?refresh=true
   cloud:
     nacos:
       discovery:
@@ -35,6 +36,9 @@ spring:
             group: AIR_GROUP
             refresh: true
           - data-id: airFlowControl.yaml  # flow策略 专用配置
+            group: AIR_GROUP
+            refresh: true
+          - data-id: airKafkaConfigProperties.yaml  # kafka 专用配置
             group: AIR_GROUP
             refresh: true
 
@@ -86,4 +90,4 @@ seata:
 #      group: consumer-TIMEOUT-group
 #      topic: topic_TIMEOUT_topic
 #      tag: ""
-#      listenerClass: "com.airfree.mq.core.AirGenericMessageConcurrentlyListener"
+#      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirGenericMessageConcurrentlyListener"

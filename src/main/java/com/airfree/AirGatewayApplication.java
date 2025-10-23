@@ -3,6 +3,7 @@ package com.airfree;
 import com.airfree.cache.config.mongo.AirMongoDbConfigProperties;
 import com.airfree.cache.config.redis.AirRedissonConfigProperties;
 import com.airfree.flow.config.AirFlowControlConfigProperties;
+import com.airfree.mq.cofig.kafka.AirKafkaConfigProperties;
 import com.airfree.mq.cofig.rocketMq.AirRocketMQConfigProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -14,7 +15,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
         AirRocketMQConfigProperties.class,
         AirRedissonConfigProperties.class,
         AirMongoDbConfigProperties.class,
-        AirFlowControlConfigProperties.class
+        AirFlowControlConfigProperties.class,
+        AirKafkaConfigProperties.class
 })
 @EnableDiscoveryClient
 @EnableAspectJAutoProxy
