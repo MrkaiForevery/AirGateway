@@ -8,15 +8,20 @@ spring:
       - nacos:airMongoDbConfig.yaml?refresh=true
       - nacos:airFlowControl.yaml?refresh=true
       - nacos:airKafkaConfigProperties.yaml?refresh=true
+      - nacos:airDiscoveryConfig.yaml?refresh=true
   cloud:
-    nacos:
+    gateway:
       discovery:
-        server-addr: 127.0.0.1:8848
-        namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
-        group: AIR_GROUP
-        username: dev
-        password: 123456
-        cluster-name: AirGatewayCluster
+        locator:
+          enabled: false
+      routes:
+        - id: health-check
+          uri:  http://localhost:10101
+          predicates:
+            - Path=/health
+          filters:
+            - SetPath=/
+    nacos:
       config:
         server-addr: 127.0.0.1:8848
         namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
@@ -39,6 +44,9 @@ spring:
             group: AIR_GROUP
             refresh: true
           - data-id: airKafkaConfigProperties.yaml  # kafka 专用配置
+            group: AIR_GROUP
+            refresh: true
+          - data-id: airDiscoveryConfig.yaml  #服务发现兼容 专用配置
             group: AIR_GROUP
             refresh: true
 

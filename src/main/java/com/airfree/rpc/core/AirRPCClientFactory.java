@@ -1,11 +1,10 @@
 package com.airfree.rpc.core;
 
 import com.airfree.discovery.AirGatewayDiscoveryService;
-import com.airfree.discovery.discoveryServiceImpl.AirGatewayNacosDiscoveryServiceImpl;
+import com.airfree.discovery.discoveryService.AirGatewayNacosDiscoveryServiceImpl;
 import com.airfree.rpc.AirGatewayRPCServiceClient;
 import com.airfree.rpc.enums.AirRPCTypeEnum;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;

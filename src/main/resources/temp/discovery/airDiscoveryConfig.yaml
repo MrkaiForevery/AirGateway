@@ -1,0 +1,25 @@
+discovery:
+  registries:
+    enabled-registries:
+      - nacos-primary
+      - zookeeper-backup
+    configs:
+      nacos-primary:
+        type: nacos
+        server-addresses:
+          - 127.0.0.1:8848
+        namespace: 72461fe0-689e-45fe-bacd-aed8948f99da
+        group: AIR_GROUP
+        username: dev
+        password: 123456
+        enabled: true
+        cluster-name: AirGatewayCluster
+      zookeeper-backup:
+        type: zookeeper
+        server-addresses:
+          - "192.168.1.101:2181"
+          - "192.168.1.102:2181"
+        namespace: "/gateway"
+        connect-timeout: 3s
+        read-timeout: 10s
+        enabled: true
