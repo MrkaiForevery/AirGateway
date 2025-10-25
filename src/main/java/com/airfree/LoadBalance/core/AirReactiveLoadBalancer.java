@@ -7,8 +7,6 @@ import com.airfree.LoadBalance.strategy.defaultImpl.AirWeightedRoundRobinStrateg
 import com.airfree.discovery.core.AirReactiveServiceDiscoveryManager;
 import com.airfree.discovery.instance.AirServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.curator.x.discovery.strategies.RandomStrategy;
-import org.apache.curator.x.discovery.strategies.RoundRobinStrategy;
 import org.springframework.cloud.gateway.support.ServiceUnavailableException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;

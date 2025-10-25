@@ -1,19 +1,19 @@
 package com.airfree.health.config;
 
-import com.airfree.health.enums.AirHealthCheckStrategyEnum;
+import com.airfree.health.enums.AirServiceInstanceHealthCheckStrategy;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
 
 @Data
-@ConfigurationProperties(prefix = "airfree.discovery.health-check")
-public class AirHealthCheckConfigProperties {
+@ConfigurationProperties(prefix = "service-instance-health-check")
+public class AirServiceInstanceHealthCheckConfigProperties {
 
     /**
      * 默认健康检查策略
      */
-    private AirHealthCheckStrategyEnum defaultStrategy = AirHealthCheckStrategyEnum.REGISTRY_BASED;
+    private AirServiceInstanceHealthCheckStrategy defaultStrategy = AirServiceInstanceHealthCheckStrategy.REGISTRY_BASED;
 
     /**
      * 客户端健康检查超时时间

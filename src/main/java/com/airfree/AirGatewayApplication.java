@@ -4,6 +4,8 @@ import com.airfree.cache.config.mongo.AirMongoDbConfigProperties;
 import com.airfree.cache.config.redis.AirRedissonConfigProperties;
 import com.airfree.discovery.config.MultiAirRegistryCenterConfig;
 import com.airfree.flow.config.AirFlowControlConfigProperties;
+import com.airfree.health.config.AirRegistryCenterHealthConfigProperties;
+import com.airfree.health.config.AirServiceInstanceHealthCheckConfigProperties;
 import com.airfree.mq.cofig.kafka.AirKafkaConfigProperties;
 import com.airfree.mq.cofig.rocketMq.AirRocketMQConfigProperties;
 import org.springframework.boot.SpringApplication;
@@ -18,8 +20,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
         AirMongoDbConfigProperties.class,
         AirFlowControlConfigProperties.class,
         AirKafkaConfigProperties.class,
-        MultiAirRegistryCenterConfig.class
-})
+        MultiAirRegistryCenterConfig.class,
+        AirServiceInstanceHealthCheckConfigProperties.class,
+        AirRegistryCenterHealthConfigProperties.class})
 @EnableDiscoveryClient
 @EnableAspectJAutoProxy
 @SpringBootApplication

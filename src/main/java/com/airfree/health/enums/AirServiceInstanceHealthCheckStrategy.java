@@ -1,6 +1,7 @@
 package com.airfree.health.enums;
 
-public enum AirHealthCheckStrategyEnum {
+public enum AirServiceInstanceHealthCheckStrategy {
+
     /**
      * 基于注册中心的健康状态
      */
@@ -19,5 +20,10 @@ public enum AirHealthCheckStrategyEnum {
     /**
      * 宽松模式（即使注册中心标记不健康也返回）
      */
-    LENIENT
+    LENIENT,
+
+    /**
+     * 基于元数据模式
+     */
+    METADATA_BASED
 }
