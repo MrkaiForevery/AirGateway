@@ -11,6 +11,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -175,13 +176,12 @@ public class AirRegistryCenterHealthService {
         long healthyCount = healthCache.values().stream().filter(AirRegistryCenterHealth::isHealthy).count();
         long totalCount = healthCache.size();
         double healthRatio = totalCount > 0 ? (double) healthyCount / totalCount : 0.0;
-
-        return Map.of(
-                "cacheSize", totalCount,
-                "healthyCount", healthyCount,
-                "healthRatio", healthRatio,
-                "timestamp", System.currentTimeMillis()
-        );
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("cacheSize", totalCount);
+        resultMap.put("healthyCount", healthyCount);
+        resultMap.put("healthRatio", healthRatio);
+        resultMap.put("timestamp", System.currentTimeMillis());
+        return resultMap;
     }
 
     // ==================== 私有辅助方法 ====================

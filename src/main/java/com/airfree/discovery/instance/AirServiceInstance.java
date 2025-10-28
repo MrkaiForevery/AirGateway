@@ -1,6 +1,9 @@
 package com.airfree.discovery.instance;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.net.URI;
 import java.util.Map;
@@ -9,7 +12,10 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * serviceInstance实例类包含健康检查逻辑*
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
+@Builder
 public class AirServiceInstance {
 
     private String instanceId;

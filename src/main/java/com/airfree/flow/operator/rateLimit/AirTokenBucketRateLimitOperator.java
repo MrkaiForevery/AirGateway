@@ -9,6 +9,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 /**
@@ -23,7 +24,7 @@ public class AirTokenBucketRateLimitOperator<T> implements AirFlowControlOperato
 
     private int capacity = 100;
     private int refillRate = 100;
-    private AtomicDouble tokens;
+    private AtomicReference<Double> tokens;
     private AtomicLong lastRefillTime;
 
     private final Function<Throwable, Mono<T>> fallbackFunction;
@@ -47,7 +48,7 @@ public class AirTokenBucketRateLimitOperator<T> implements AirFlowControlOperato
         int refillRateFiled = Integer.parseInt(configMap.get("refillRate").toString());
         this.refillRate = refillRateFiled;
         // 当前令牌数
-        this.tokens = new AtomicDouble(this.capacity);
+        this.tokens = new AtomicReference<>((double)this.capacity);
         // 最后补充时间
         this.lastRefillTime = new AtomicLong(System.currentTimeMillis());
     }

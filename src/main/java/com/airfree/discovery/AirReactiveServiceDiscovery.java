@@ -7,8 +7,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.Duration;
+import java.util.Map;
 
-public interface AirReactiveServiceDiscovery  {
+public interface AirReactiveServiceDiscovery {
 
     /**
      * 获取注册中心类型
@@ -47,4 +48,32 @@ public interface AirReactiveServiceDiscovery  {
      * 检查健康状态
      */
     Mono<Boolean> isHealthy();
+
+    /**
+     * 注册服务实例
+     */
+    Mono<Boolean> registerInstance(String serviceName, String host, int port,
+                                   Map<String, String> metadata);
+
+    /**
+     * 注销服务实例
+     */
+    Mono<Boolean> deregisterInstance(String serviceName, String host, int port);
+
+
+    /**
+     * 判断是否支持服务注册
+     */
+    boolean supportsRegistration();
+
+    /**
+     * 关闭资源
+     */
+
+    void close();
+
+    /**
+     * 判断客户端是否已关闭
+     */
+    boolean isClosed();
 }

@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
- * 多注册中心路由定位器*
+ * 多注册中心路由定位器,这里使用spring-cloud-gateway的locator来管理
  */
 @Slf4j
 @Component

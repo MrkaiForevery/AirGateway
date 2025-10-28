@@ -12,6 +12,8 @@ import reactor.core.publisher.Mono;
 
 import java.net.Socket;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -251,7 +253,7 @@ public class AirServiceInstanceHealthCheckService {
 
         // 这里需要从原始数据源获取实例，实际实现中需要注入相应的依赖
         // 暂时返回空列表，具体实现需要根据实际情况调整
-        return Mono.just(List.of());
+        return Mono.just(new ArrayList<>());
     }
 
 
@@ -289,14 +291,14 @@ public class AirServiceInstanceHealthCheckService {
                 .count();
         long totalCount = healthCheckCache.size();
         double healthRatio = totalCount > 0 ? (double) healthyCount / totalCount : 0.0;
+        Map<String,Object> resultMap = new HashMap<>();
+        resultMap.put("cacheSize", totalCount);
+        resultMap.put("healthyCount", healthyCount);
+        resultMap.put("healthRatio", healthRatio);
+        resultMap.put("config", config);
+        resultMap.put("timestamp", System.currentTimeMillis());
 
-        return Map.of(
-                "cacheSize", totalCount,
-                "healthyCount", healthyCount,
-                "healthRatio", healthRatio,
-                "config", config,
-                "timestamp", System.currentTimeMillis()
-        );
+        return resultMap;
     }
 
     // ==================== 内部类 ====================

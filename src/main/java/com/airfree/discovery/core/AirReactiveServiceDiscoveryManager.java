@@ -7,6 +7,7 @@ import com.airfree.discovery.config.MultiAirRegistryCenterConfig;
 import com.airfree.discovery.event.AirServiceDiscoveryEvent;
 import com.airfree.discovery.event.AirServiceInstanceEvent;
 import com.airfree.discovery.instance.AirServiceInstance;
+import com.airfree.discovery.utils.EnvironmentUtils;
 import com.airfree.health.core.AirRegistryCenterHealthService;
 import com.airfree.health.core.AirServiceInstanceHealthCheckService;
 import com.airfree.health.entity.AirRegistryCenterHealth;
@@ -19,8 +20,8 @@ import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,6 +29,7 @@ import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,22 +59,29 @@ public class AirReactiveServiceDiscoveryManager {
     private final Counter discoveryCounter;
     private final Timer discoveryTimer;
 
+    //=============把自身作为服务注册到注册中心中的依赖==========
+    private final Environment environment;
+    private final Map<String, RegistrationHandle> registrationHandles = new ConcurrentHashMap<>();
 
     //============= 构造方法 =================
     public AirReactiveServiceDiscoveryManager(AirReactiveRegistryCenterFactory registryFactory,
                                               MultiAirRegistryCenterConfig multiRegistryConfig,
                                               AirServiceInstanceHealthCheckService serviceInstanceHealthCheckService,
                                               AirRegistryCenterHealthService registryCenterHealthService,
-                                              ApplicationEventPublisher eventPublisher) {
+                                              ApplicationEventPublisher eventPublisher,
+                                              Environment environment) {
         this.registryFactory = registryFactory;
         this.multiRegistryConfig = multiRegistryConfig;
         this.serviceInstanceHealthCheckService = serviceInstanceHealthCheckService;
         this.registryCenterHealthService = registryCenterHealthService;
         this.eventPublisher = eventPublisher;
+        this.environment = environment;
         //todo 这里先写死构造方法的两个参数值，以后再从外部读取
         this.cache = new AirServiceDiscoveryCache(30, 1000);
-        //todo 这里异步初始化，需要有个标志句柄表示初始化是否完全完成
-        initializationMono = initialize().cache();
+        //todo 这里异步初始化，需要有个标志句柄表示初始化是否完全完成,并把自身注册到注册中心
+        this.initializationMono = initialize()
+                .then(registerAirGatewayToRegistries())
+                .cache();
         // 初始化监控指标
         this.discoveryCounter = Metrics.counter("service.discovery.requests");
         this.discoveryTimer = Metrics.timer("service.discovery.duration");
@@ -142,10 +151,23 @@ public class AirReactiveServiceDiscoveryManager {
      */
     public Flux<AirServiceInstance> discoverService(String serviceId) {
         return ensureInitialized()
-                .then(Mono.fromCallable(() -> discoveryTimer.record(() -> {
-                    discoveryCounter.increment();
-                    return cache.getOrLoad(serviceId, this::fetchInstancesFromAllRegistries);
-                })))
+                .then(Mono.fromCallable(() -> {
+                    // 检查是否有客户端已关闭
+                    boolean anyClosed = getAllDiscoveriesAsFlux()
+                            .any(AirReactiveServiceDiscovery::isClosed)
+                            .blockOptional()
+                            .orElse(false);
+
+                    if (anyClosed) {
+                        log.warn("部分发现客户端已关闭，尝试重新初始化...");
+                        // 可以在这里触发重新初始化
+                    }
+
+                    return discoveryTimer.record(() -> {
+                        discoveryCounter.increment();
+                        return cache.getOrLoad(serviceId, this::fetchInstancesFromAllRegistries);
+                    });
+                }))
                 .flatMapMany(Function.identity());
     }
 
@@ -268,14 +290,18 @@ public class AirReactiveServiceDiscoveryManager {
      * 根据版本过滤服务实例
      */
     public Flux<AirServiceInstance> getInstancesByVersion(String serviceId, String version) {
-        return getInstancesWithMetadata(serviceId, Map.of("version", version));
+        Map<String, String> metaMap = new HashMap<>();
+        metaMap.put("version", version);
+        return getInstancesWithMetadata(serviceId, metaMap);
     }
 
     /**
      * 根据区域过滤服务实例
      */
     public Flux<AirServiceInstance> getInstancesByZone(String serviceId, String zone) {
-        return getInstancesWithMetadata(serviceId, Map.of("zone", zone));
+        Map<String, String> metaMap = new HashMap<>();
+        metaMap.put("zone", zone);
+        return getInstancesWithMetadata(serviceId, metaMap);
     }
 
     // ==================== 注册中心健康检查集成 ====================
@@ -680,31 +706,38 @@ public class AirReactiveServiceDiscoveryManager {
     // ==================== 资源关闭 ====================
     @PreDestroy
     public Mono<Void> shutdown() {
-        return Flux.fromIterable(serviceDiscoveries.values())
-                .flatMap(Flux::fromIterable)
-                .flatMap(discovery -> {
-                    if (discovery instanceof DisposableBean) {
-                        try {
-                            ((DisposableBean) discovery).destroy();
-                        } catch (Exception e) {
-                            log.info("服务发现管理器关闭失败！！！");
-                            e.printStackTrace();
-                        }
-                    }
-                    return Mono.empty();
-                })
+        log.info("开始关闭服务发现管理器...");
+
+        return Flux.fromIterable(registrationHandles.values())
+                .flatMap(RegistrationHandle::deregister)
                 .then()
+                .then(Mono.defer(() -> {
+                    // 统一关闭所有发现客户端
+                    return getAllDiscoveriesAsFlux()
+                            .flatMap(discovery -> {
+                                try {
+                                    if (!discovery.isClosed()) {
+                                        discovery.close();
+                                        log.debug("{} 客户端已关闭", discovery.getRegistryType());
+                                    }
+                                    return Mono.empty();
+                                } catch (Exception e) {
+                                    log.warn("关闭发现客户端时发生异常: {}", discovery.getRegistryType(), e);
+                                    return Mono.empty();
+                                }
+                            })
+                            .then();
+                }))
                 .doOnSuccess(v -> {
-                    //清理缓存
+                    // 清理其他资源
                     cache.clear();
                     serviceDiscoveries.clear();
+                    registrationHandles.clear();
                     initialized = false;
-                    // 清理健康检查缓存
-                    serviceInstanceHealthCheckService.clearCache();
-                    registryCenterHealthService.clearCache();
-                    log.info("服务发现管理器已关闭");
-                    // 发布关闭事件
-                    publishManagerShutdownEvent();
+                    log.info("服务发现管理器关闭完成");
+                })
+                .doOnError(error -> {
+                    log.error("服务发现管理器关闭过程中发生错误", error);
                 });
     }
 
@@ -731,5 +764,66 @@ public class AirReactiveServiceDiscoveryManager {
                         entry -> entry.getValue().size()
                 ));
     }
+
+    //==========注册自身服务到各注册中心方法相关================
+
+    // 修改初始化逻辑
+    private Mono<Void> registerAirGatewayToRegistries() {
+        return Mono.fromRunnable(() -> {
+            String serviceName = "air-gateway";
+            String host = EnvironmentUtils.getLocalHost(environment);
+            int port = EnvironmentUtils.getServerPort(environment);
+
+            Map<String, String> metadata = new HashMap<>();
+            metadata.put("version", "1.0.0");
+            metadata.put("airGateway", "true");
+            metadata.put("startupTime", String.valueOf(System.currentTimeMillis()));
+            metadata.put("healthy", "true");
+
+            // 注册到所有支持注册的发现客户端
+            getAllDiscoveriesAsFlux()
+                    .filter(AirReactiveServiceDiscovery::supportsRegistration)
+                    .subscribe(discovery -> {
+                        String registryType = discovery.getRegistryType();
+
+                        discovery.registerInstance(serviceName, host, port, metadata)
+                                .subscribe(success -> {
+                                    if (success) {
+                                        log.info("网关成功注册到 {}: {}:{}", registryType, host, port);
+
+                                        // 保存注册句柄用于注销
+                                        registrationHandles.put(registryType,
+                                                new RegistrationHandle(discovery, serviceName, host, port));
+                                    } else {
+                                        log.error("网关注册到 {} 失败: {}:{}", registryType, host, port);
+                                    }
+                                });
+                    });
+        });
+    }
+
+    /**
+     * 注册句柄内部类
+     */
+    private static class RegistrationHandle {
+        private final AirReactiveServiceDiscovery discovery;
+        private final String serviceName;
+        private final String host;
+        private final int port;
+
+        public RegistrationHandle(AirReactiveServiceDiscovery discovery,
+                                  String serviceName, String host, int port) {
+            this.discovery = discovery;
+            this.serviceName = serviceName;
+            this.host = host;
+            this.port = port;
+        }
+
+        public Mono<Boolean> deregister() {
+            return discovery.deregisterInstance(serviceName, host, port);
+        }
+    }
+
+
 }
 

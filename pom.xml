@@ -18,8 +18,7 @@
         <maven.compiler.target>17</maven.compiler.target>
         <spring.cloud.alibaba.version>2023.0.3.2</spring.cloud.alibaba.version>
         <spring.cloud.version>2023.0.3</spring.cloud.version>
-        <loadbalancer.version>4.3.0</loadbalancer.version>
-        <grpc.starter.version>2.15.0.RELEASE</grpc.starter.version>
+        <grpc.starter.version>3.1.0.RELEASE</grpc.starter.version>
     </properties>
 
     <dependencyManagement>
@@ -90,10 +89,10 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
-        <!-- loadbalancer 配置管理 -->
+        <!-- spring-cloud-gateway 配置管理 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
+            <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
         <!-- seata 配置管理 -->
         <dependency>
@@ -156,13 +155,6 @@
             <artifactId>kafka-clients</artifactId>
             <version>3.2.3</version>
         </dependency>
-
-        <!-- Spring Cloud Gateway -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
-        </dependency>
-
         <!-- caffeine 缓存配置 -->
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>

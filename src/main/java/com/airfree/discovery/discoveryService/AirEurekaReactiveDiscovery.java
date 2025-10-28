@@ -7,6 +7,8 @@ import com.airfree.discovery.instance.AirServiceInstance;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 public class AirEurekaReactiveDiscovery implements AirReactiveServiceDiscovery {
     @Override
     public String getRegistryType() {
@@ -36,5 +38,30 @@ public class AirEurekaReactiveDiscovery implements AirReactiveServiceDiscovery {
     @Override
     public Mono<Boolean> isHealthy() {
         return null;
+    }
+
+    @Override
+    public Mono<Boolean> registerInstance(String serviceName, String host, int port, Map<String, String> metadata) {
+        return null;
+    }
+
+    @Override
+    public Mono<Boolean> deregisterInstance(String serviceName, String host, int port) {
+        return null;
+    }
+
+    @Override
+    public boolean supportsRegistration() {
+        return false;
+    }
+
+    @Override
+    public void close() {
+
+    }
+
+    @Override
+    public boolean isClosed() {
+        return false;
     }
 }

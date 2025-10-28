@@ -7,11 +7,11 @@ import com.airfree.LoadBalance.strategy.defaultImpl.AirWeightedRoundRobinStrateg
 import com.airfree.discovery.core.AirReactiveServiceDiscoveryManager;
 import com.airfree.discovery.instance.AirServiceInstance;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.gateway.support.ServiceUnavailableException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import javax.naming.ServiceUnavailableException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

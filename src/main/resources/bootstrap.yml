@@ -10,10 +10,15 @@ spring:
       - nacos:airKafkaConfigProperties.yaml?refresh=true
       - nacos:airDiscoveryConfig.yaml?refresh=true
   cloud:
+    service-registry:
+      auto-registration:
+        enabled: false #禁用限制多个注册中心配置
+    consul:
+      enabled: false  #禁用consul注册中心自动配置
     gateway:
       discovery:
         locator:
-          enabled: false
+          enabled: false #禁用gateway的路由定位器自动配置
       routes:
         - id: health-check
           uri:  http://localhost:10101
@@ -21,6 +26,9 @@ spring:
             - Path=/health
           filters:
             - SetPath=/
+      filter:
+        json-to-grpc:
+          enabled: false  #禁用grpc自动配置导致启动报错
     nacos:
       config:
         server-addr: 127.0.0.1:8848
@@ -75,27 +83,3 @@ seata:
       username: dev
       password: 123456
       application: SeataServer
-
-#rocketmq:
-#  nameserver: 127.0.0.1:9876
-#  producers:
-#    producerIC:
-#      group: producer-IC-group
-#      topics:
-#        topic1: producer-IC-group_topic_1
-#        topic2: producer-IC-group_topic_2
-#    producerTC:
-#      group: producer-TC-group
-#      topics: {}
-#    producer-SMS:
-#      group: producer-SMS-group
-#      topics: {}
-#    producer-TIMEOUT:
-#      group: producer-TIMEOUT-group
-#      topics: {}
-#  consumers:
-#    consumer-TIMEOUT:
-#      group: consumer-TIMEOUT-group
-#      topic: topic_TIMEOUT_topic
-#      tag: ""
-#      listenerClass: "com.airfree.mq.core.listener.rocketMq.AirGenericMessageConcurrentlyListener"
