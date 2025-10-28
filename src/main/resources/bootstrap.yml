@@ -61,6 +61,7 @@ spring:
 seata:
   application-id: AirGateway
   tx-service-group: AIR_TX_GROUP
+  enabled: true
   service:
     vgroup-mapping:
       AIR_TX_GROUP: AirSeataCluster #这个地方必须要在nacos的关于seata的配置文件里面找到，它才能映射

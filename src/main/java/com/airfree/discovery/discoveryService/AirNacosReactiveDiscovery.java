@@ -145,12 +145,13 @@ public class AirNacosReactiveDiscovery implements AirReactiveServiceDiscovery {
             instance.setWeight(1.0);
             instance.setHealthy(true);
             instance.setEnabled(true);
+            instance.setClusterName("AirGatewayCluster");
 
             if (metadata != null) {
                 instance.setMetadata(metadata);
             }
 
-            namingService.registerInstance(serviceName, instance);
+            namingService.registerInstance(serviceName, "AIR_GROUP",instance);
             log.info("服务实例注册成功: {} - {}:{}", serviceName, ip, port);
             return true;
         }).onErrorResume(e -> {

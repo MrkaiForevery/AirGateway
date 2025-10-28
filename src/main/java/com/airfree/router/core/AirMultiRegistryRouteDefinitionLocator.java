@@ -19,6 +19,11 @@ import java.util.function.Function;
 
 /**
  * 多注册中心路由定位器,这里使用spring-cloud-gateway的locator来管理
+ * 启动时：从所有注册中心获取服务列表，为每个服务创建路由
+ * 运行时：监听服务实例变化（新增、修改、删除），动态更新路由
+ * 路由匹配：Gateway 根据路径、Header 等条件匹配路由
+ * 请求转发：通过负载均衡（lb://）将请求转发到具体服务实例
+ * 路径重写：移除服务名前缀，保持后端服务接口不变
  */
 @Slf4j
 @Component
@@ -62,7 +67,7 @@ public class AirMultiRegistryRouteDefinitionLocator implements RouteDefinitionLo
     private Flux<RouteDefinition> createRouteDefinitionsForService(String serviceId) {
         return discoveryManager.discoverService(serviceId)
                 .take(1)
-                .next() // 取第一个实例转换为 Mono
+                .next() // 取第一个实例转换为 Mono（用于获取元数据）
                 .flatMapMany(instance ->
                         Mono.fromCallable(() -> buildRouteDefinitions(serviceId, instance))
                                 .flatMapIterable(Function.identity())
@@ -85,7 +90,7 @@ public class AirMultiRegistryRouteDefinitionLocator implements RouteDefinitionLo
     private List<RouteDefinition> buildRouteDefinitions(String serviceId, AirServiceInstance instance) {
         List<RouteDefinition> routes = new ArrayList<>();
 
-        // 默认路由
+        // 默认路由:/serviceId/**
         routes.add(createDefaultRoute(serviceId, instance));
 
         // 基于元数据的自定义路由
@@ -329,7 +334,7 @@ public class AirMultiRegistryRouteDefinitionLocator implements RouteDefinitionLo
     private void enhanceRouteWithRPCInfo(RouteDefinition route) {
         Map<String, Object> metadata = route.getMetadata();
         if (metadata == null) {
-            metadata = new HashMap<String,Object>();
+            metadata = new HashMap<>();
             route.setMetadata(metadata);
         }
 
