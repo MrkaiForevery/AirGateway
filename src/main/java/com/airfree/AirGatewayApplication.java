@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
+//这是一个启动类
 @EnableConfigurationProperties({
         AirRocketMQConfigProperties.class,
         AirRedissonConfigProperties.class,
