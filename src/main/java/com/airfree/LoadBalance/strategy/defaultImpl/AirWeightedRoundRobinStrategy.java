@@ -8,6 +8,9 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * 权重策略
+ */
 public class AirWeightedRoundRobinStrategy implements AirLoadBalanceStrategy {
 
     private final AtomicLong counter = new AtomicLong(0);

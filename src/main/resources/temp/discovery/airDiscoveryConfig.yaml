@@ -17,9 +17,8 @@ discovery:
       zookeeper-backup:
         type: zookeeper
         server-addresses:
-          - "192.168.1.101:2181"
-          - "192.168.1.102:2181"
+          - "127.0.0.1:2182"
         namespace: "/gateway"
-        connect-timeout: 3s
+        connect-timeout: 15s
         read-timeout: 10s
         enabled: true
